@@ -133,9 +133,24 @@ fun Patcher(
                 continue
             }
             Log(String.format(context.getString(R.string.COPY_TRY), target.name))
+            var check = false
             for (data in target.listFiles()) {
-                FileUtils.copyFileToDirectory(data, gibberish[0])
+                if (data.isDirectory) {
+                    for (data2 in data.listFiles()) {
+                        if (data2.name == "__data") {
+                            check = true
+                            FileUtils.copyFileToDirectory(data2, gibberish[0])
+                            Log(String.format(context.getString(R.string.COPY_DONE), target.name))
+                        }
+                    }
+                }
+                else if (data.name == "__data") {
+                    check = true
+                    FileUtils.copyFileToDirectory(data, gibberish[0])
+                    Log(String.format(context.getString(R.string.COPY_DONE), target.name))
+                }
             }
+            if (!check) Log(String.format(context.getString(R.string.SRC_NO_DATA), target.name))
         }
 
     }
@@ -186,6 +201,32 @@ fun PatcherSAF(
             var check = false
             for (f in target.listFiles()) {
                 if (f == null) continue
+                if (f.isDirectory) {
+                    for (f2 in f.listFiles()) {
+                        if (f2.name != "__data") continue
+                        Log(String.format(context.getString(R.string.COPY_TRY), target.name))
+                        check = true
+                        try {
+                            val targetList = newtarget.listFiles()
+                            if (targetList.size != 1) {
+                                Log(String.format(context.getString(R.string.MORE_THAN_ONE), newtarget.name))
+                                continue
+                            }
+                            val gibberish = targetList[0]
+                            var report = false
+                            for (dat in gibberish.listFiles()) {
+                                if (dat.name == "__data") {
+                                    report = true
+                                    if (xcopy(context, f2, dat)) Log(String.format(context.getString(R.string.COPY_DONE), target.name))
+                                }
+                            }
+                            if (!report) Log(String.format(context.getString(R.string.DEST_NO_DATA), target.name))
+                        }
+                        catch(e: Exception) {
+                            Log(e.toString())
+                        }
+                    }
+                }
                 if (f.name != "__data") continue
                 Log(String.format(context.getString(R.string.COPY_TRY), target.name))
                 check = true
