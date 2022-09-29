@@ -20,6 +20,8 @@
 
     <string name="SELECT_MOD">SELECT MOD FOLDER</string>
 
+    <string name="COPY_TRY">Try to copy __data from %s</string>
+    <string name="MORE_THAN_ONE">More than one file or folder in %s</string>
     <string name="NO_MOD_DOC">Mod Folder not Found</string>
     <string name="NO_DATA_DOC">Data Folder not Found</string>
     <string name="NO_DEST">Folder %s does not exist in Shared</string>

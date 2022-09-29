@@ -106,7 +106,7 @@ fun Patcher(
         }
         return null
     }
-
+    Log("Start")
     for ((switch, path) in switches) {
         if (!switch.isChecked) continue // 스위치 체크 안된거 넘어가기
 
@@ -128,7 +128,11 @@ fun Patcher(
             val newTarget = findMatchedStorageName(fullPath, target.name) ?: continue
             if (!newTarget.isDirectory) continue
             val gibberish = newTarget.listFiles()
-            if (gibberish.size != 1) continue
+            if (gibberish.size != 1) {
+                Log(String.format(context.getString(R.string.MORE_THAN_ONE), newTarget.name))
+                continue
+            }
+            Log(String.format(context.getString(R.string.COPY_TRY), target.name))
             for (data in target.listFiles()) {
                 FileUtils.copyFileToDirectory(data, gibberish[0])
             }
@@ -154,6 +158,7 @@ fun PatcherSAF(
         Log(context.getString(R.string.NO_DATA_DOC))
         return
     }
+    Log("Start")
     for ((switch, path) in switches) {
         if (!switch.isChecked) continue // 스위치 체크 안된거 넘어가기
         val shared = findMatchedDoc(path, dataDoc) ?: continue
@@ -182,10 +187,14 @@ fun PatcherSAF(
             for (f in target.listFiles()) {
                 if (f == null) continue
                 if (f.name != "__data") continue
+                Log(String.format(context.getString(R.string.COPY_TRY), target.name))
                 check = true
                 try {
                     val targetList = newtarget.listFiles()
-                    if (targetList.size != 1) continue
+                    if (targetList.size != 1) {
+                        Log(String.format(context.getString(R.string.MORE_THAN_ONE), newtarget.name))
+                        continue
+                    }
                     val gibberish = targetList[0]
                     var report = false
                     for (dat in gibberish.listFiles()) {

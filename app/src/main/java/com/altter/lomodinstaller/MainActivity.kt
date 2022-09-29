@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         val tempmodURI = prefs.getString(PREF_MOD_URI, null)
         if (tempmodFolder != null) try {
             this.modDoc = DocumentFile.fromTreeUri(this, Uri.parse(tempmodURI))
-            "".also { this.modFolder = it }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) this.modFolder = ""
         }
         catch (e: Exception) {
             this.modDoc = null
