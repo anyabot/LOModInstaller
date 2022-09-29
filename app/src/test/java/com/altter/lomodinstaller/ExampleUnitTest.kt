@@ -1,4 +1,4 @@
-package com.swaytwig.lastorigincleaner
+package com.altter.lomodinstaller
 
 import org.junit.Test
 
