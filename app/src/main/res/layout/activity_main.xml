@@ -51,6 +51,12 @@
                 android:text="@string/SELECT_MOD" />
 
             <TextView
+                android:id="@+id/mod_warning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/MOD_WARNING" />
+
+            <TextView
                 android:id="@+id/mod_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />

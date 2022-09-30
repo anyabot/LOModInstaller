@@ -125,6 +125,7 @@ fun Patcher(
 
         for (target in modDirs) { // 대상 디렉터리들
             if (!target.isDirectory) continue
+            Log(String.format(context.getString(R.string.COPY_TRY), target.name))
             val newTarget = findMatchedStorageName(fullPath, target.name) ?: continue
             if (!newTarget.isDirectory) continue
             val gibberish = newTarget.listFiles()
@@ -132,22 +133,41 @@ fun Patcher(
                 Log(String.format(context.getString(R.string.MORE_THAN_ONE), newTarget.name))
                 continue
             }
-            Log(String.format(context.getString(R.string.COPY_TRY), target.name))
             var check = false
             for (data in target.listFiles()) {
                 if (data.isDirectory) {
                     for (data2 in data.listFiles()) {
                         if (data2.name == "__data") {
                             check = true
-                            FileUtils.copyFileToDirectory(data2, gibberish[0])
-                            Log(String.format(context.getString(R.string.COPY_DONE), target.name))
+                            if (gibberish[0].isDirectory) {
+                                FileUtils.copyFileToDirectory(data2, gibberish[0])
+                                Log(
+                                    String.format(
+                                        context.getString(R.string.COPY_DONE),
+                                        target.name
+                                    )
+                                )
+                            }
+                            else {
+                                Log(String.format(context.getString(R.string.NOT_DIRECTORY_2), gibberish[0].name, target.name))
+                            }
                         }
                     }
                 }
                 else if (data.name == "__data") {
                     check = true
-                    FileUtils.copyFileToDirectory(data, gibberish[0])
-                    Log(String.format(context.getString(R.string.COPY_DONE), target.name))
+                    if (gibberish[0].isDirectory) {
+                        FileUtils.copyFileToDirectory(data, gibberish[0])
+                        Log(
+                            String.format(
+                                context.getString(R.string.COPY_DONE),
+                                target.name
+                            )
+                        )
+                    }
+                    else {
+                        Log(String.format(context.getString(R.string.NOT_DIRECTORY_2), gibberish[0].name, target.name))
+                    }
                 }
             }
             if (!check) Log(String.format(context.getString(R.string.SRC_NO_DATA), target.name))
@@ -198,6 +218,10 @@ fun PatcherSAF(
                 Log(String.format(context.getString(R.string.NO_DEST), target.name))
                 continue
             }
+            if (!newtarget.isDirectory) {
+                Log(String.format(context.getString(R.string.NOT_DIRECTORY), target.name))
+                continue
+            }
             var check = false
             for (f in target.listFiles()) {
                 if (f == null) continue
@@ -214,11 +238,27 @@ fun PatcherSAF(
                             }
                             val gibberish = targetList[0]
                             var report = false
-                            for (dat in gibberish.listFiles()) {
-                                if (dat.name == "__data") {
-                                    report = true
-                                    if (xcopy(context, f2, dat)) Log(String.format(context.getString(R.string.COPY_DONE), target.name))
+                            if (gibberish.isDirectory) {
+                                for (dat in gibberish.listFiles()) {
+                                    if (dat.name == "__data") {
+                                        report = true
+                                        if (xcopy(
+                                                context,
+                                                f2,
+                                                dat
+                                            )
+                                        ) Log(
+                                            String.format(
+                                                context.getString(R.string.COPY_DONE),
+                                                target.name
+                                            )
+                                        )
+                                    }
                                 }
+                            }
+                            else {
+                                Log(String.format(context.getString(R.string.NOT_DIRECTORY_2), gibberish.name, target.name))
+                                continue
                             }
                             if (!report) Log(String.format(context.getString(R.string.DEST_NO_DATA), target.name))
                         }
@@ -238,11 +278,27 @@ fun PatcherSAF(
                     }
                     val gibberish = targetList[0]
                     var report = false
-                    for (dat in gibberish.listFiles()) {
-                        if (dat.name == "__data") {
-                            report = true
-                            if (xcopy(context, f, dat)) Log(String.format(context.getString(R.string.COPY_DONE), target.name))
+                    if (gibberish.isDirectory) {
+                        for (dat in gibberish.listFiles()) {
+                            if (dat.name == "__data") {
+                                report = true
+                                if (xcopy(
+                                        context,
+                                        f,
+                                        dat
+                                    )
+                                ) Log(
+                                    String.format(
+                                        context.getString(R.string.COPY_DONE),
+                                        target.name
+                                    )
+                                )
+                            }
                         }
+                    }
+                    else {
+                        Log(String.format(context.getString(R.string.NOT_DIRECTORY_2), gibberish.name, target.name))
+                        continue
                     }
                     if (!report) Log(String.format(context.getString(R.string.DEST_NO_DATA), target.name))
                 }

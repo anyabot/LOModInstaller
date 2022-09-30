@@ -19,9 +19,12 @@
     <string name="GRANT_ALREADY_GRANTED">Permission already Granted.</string>
 
     <string name="SELECT_MOD">SELECT MOD FOLDER</string>
+    <string name="MOD_WARNING">The Mod Folder is the Folder holding mods to be applied, NOT the one to be replaced.</string>
 
     <string name="COPY_TRY">Try to copy __data from %s</string>
     <string name="MORE_THAN_ONE">More than one file or folder in %s</string>
+    <string name="NOT_DIRECTORY">%s is not a Folder</string>
+    <string name="NOT_DIRECTORY_2">%s in % is not a Folder</string>
     <string name="NO_MOD_DOC">Mod Folder not Found</string>
     <string name="NO_DATA_DOC">Data Folder not Found</string>
     <string name="NO_DEST">Folder %s does not exist in Shared</string>

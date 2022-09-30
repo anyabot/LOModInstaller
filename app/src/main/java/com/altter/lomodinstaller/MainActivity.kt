@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity() {
                 setMessage(R.string.GRANT_PERMISSION_MESSAGE)
                 setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        Log("Trying")
+//                        Log("Trying")
 
                         val sm = context.getSystemService(STORAGE_SERVICE) as StorageManager
 
@@ -210,7 +210,7 @@ class MainActivity : AppCompatActivity() {
                 )
             }
 
-            uri.path?.let { Log(it) }
+//            uri.path?.let { Log(it) }
             val doc = DocumentFile.fromTreeUri(this, uri)
             if (doc != null) {
                 this.dataDoc = doc
@@ -228,7 +228,7 @@ class MainActivity : AppCompatActivity() {
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
                     val file = File(uri.path)
-                    uri.path?.let { Log(it) }
+//                    uri.path?.let { Log(it) }
 
                     val doc = DocumentFile.fromTreeUri(this, uri)
                     if (doc != null) {
@@ -314,7 +314,7 @@ class MainActivity : AppCompatActivity() {
         ) {
             cleanBtn.isEnabled = false
             if (need_request)
-                this.requestPermission(permissions);
+                this.requestPermission(permissions)
         } else
             cleanBtn.isEnabled = true
 
