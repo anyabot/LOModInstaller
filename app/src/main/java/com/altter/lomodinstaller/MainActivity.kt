@@ -84,6 +84,10 @@ class MainActivity : AppCompatActivity() {
                 findViewById<Switch>(R.id.switch_filter_playstore_jp),
                 "com.pig.laojp.aos"
             )
+            switches.put(
+                findViewById<Switch>(R.id.switch_filter_fanza),
+                "jp.co.fanzagames.lastorigin_r"
+            )
         }
         else {
             switches.put(
@@ -97,6 +101,10 @@ class MainActivity : AppCompatActivity() {
             switches.put(
                 findViewById<Switch>(R.id.switch_filter_playstore_jp),
                 "Android/data/com.pig.laojp.aos"
+            )
+            switches.put(
+                findViewById<Switch>(R.id.switch_filter_fanza),
+                "Android/data/jp.co.fanzagames.lastorigin_r"
             )
         }
 

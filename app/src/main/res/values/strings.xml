@@ -5,7 +5,8 @@
 
     <string name="platform_onestore">KR Uncensored</string>
     <string name="platform_playstore">KR Censored</string>
-    <string name="platform_playstore_jp">Jp Censored</string>
+    <string name="platform_playstore_jp">JP Censored</string>
+    <string name="platform_fanza_jp">JP Uncensored</string>
 
     <string name="patch_btn">Patch!</string>
 
