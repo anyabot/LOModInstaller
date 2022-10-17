@@ -32,4 +32,7 @@
     <string name="COPY_DONE">Copied __data from %s</string>
     <string name="DEST_NO_DATA">__data does not exist in destination %s in Shared</string>
     <string name="SRC_NO_DATA">__data does not exist in source %s in Mod Folder</string>
+
+    <string name="WRONG_FOLDER_13">Wrong Folder Name</string>
+    <string name="FAIL_FOLDER_13">Cannot Access Folder</string>
 </resources>

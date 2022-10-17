@@ -4,18 +4,27 @@ plugins {
 }
 
 android {
-    compileSdkVersion 29
+    signingConfigs {
+        debug {
+            storeFile file('C:\\Users\\TuLeThanh\\Downloads\\LO\\Signaturre\\signature.jks')
+            storePassword 'LePhuc8689A'
+            keyPassword 'LePhuc8689A'
+            keyAlias 'key2'
+        }
+    }
+    compileSdkVersion 33
     buildToolsVersion "30.0.3"
 
     defaultConfig {
         applicationId "com.altter.lomodinstaller"
         minSdkVersion 16
-        targetSdkVersion 29
+        targetSdkVersion 33
         versionCode 10001
         versionName "1.0.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+        signingConfig signingConfigs.debug
     }
 
     buildTypes {

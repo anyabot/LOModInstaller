@@ -82,11 +82,21 @@
                         android:contentDescription="@string/platform_onestore"
                         app:srcCompat="@drawable/onestore" />
 
+
                     <Switch
                         android:id="@+id/switch_filter_onestore"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/platform_onestore" />
+                        android:text="@string/platform_onestore"
+                        android:layout_weight="2"
+                        />
+                    <Button
+                        android:id="@+id/button_grant_onestore"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/GRANT_PERIMSSION"
+                        android:layout_weight="1"
+                        android:textSize="10sp"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -102,13 +112,23 @@
                         android:layout_marginEnd="10dp"
                         android:layout_marginRight="10dp"
                         android:contentDescription="@string/platform_onestore"
-                        app:srcCompat="@drawable/playstore" />
+                        app:srcCompat="@drawable/playstore"
+                        />
 
                     <Switch
                         android:id="@+id/switch_filter_playstore"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/platform_playstore" />
+                        android:text="@string/platform_playstore"
+                        android:layout_weight="2"/>
+                    <Button
+                        android:id="@+id/button_grant_playstore"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/GRANT_PERIMSSION"
+                        android:layout_weight="1"
+                        android:textSize="10sp"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -128,9 +148,18 @@
 
                     <Switch
                         android:id="@+id/switch_filter_playstore_jp"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/platform_playstore_jp" />
+                        android:text="@string/platform_playstore_jp"
+                        android:layout_weight="2"/>
+
+                    <Button
+                        android:id="@+id/button_grant_playstore_jp"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/GRANT_PERIMSSION"
+                        android:layout_weight="1"
+                        android:textSize="10sp"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -150,9 +179,18 @@
 
                     <Switch
                         android:id="@+id/switch_filter_fanza"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/platform_fanza_jp" />
+                        android:text="@string/platform_fanza_jp"
+                        android:layout_weight="2"/>
+
+                    <Button
+                        android:id="@+id/button_grant_fanza"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/GRANT_PERIMSSION"
+                        android:layout_weight="1"
+                        android:textSize="10sp"/>
                 </LinearLayout>
 
             </LinearLayout>
