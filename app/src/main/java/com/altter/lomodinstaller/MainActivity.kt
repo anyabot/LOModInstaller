@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
         val tempmodFolder = prefs.getString(PREF_MOD_FOLDER, null)
         if (tempmodFolder != null) this.modFolder = tempmodFolder
         val tempmodURI = prefs.getString(PREF_MOD_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && Build.VERSION.SDK_INT < Build.VERSION_CODES.S) try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) try {
             this.modDoc = DocumentFile.fromTreeUri(this, Uri.parse(tempmodURI))
         }
         catch (e: Exception) {
@@ -72,35 +72,35 @@ class MainActivity : AppCompatActivity() {
             this.modFolder = ""
         }
         val tempdataURI = prefs.getString(PREF_DATA_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && Build.VERSION.SDK_INT < Build.VERSION_CODES.S) try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) try {
             this.dataDoc = DocumentFile.fromTreeUri(this, Uri.parse(tempdataURI))
         }
         catch (e: Exception) {
             this.dataDoc = null
         }
         val oneStoreURI = prefs.getString(PREF_ONESTORE_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) try {
             this.oneStoreDoc = DocumentFile.fromTreeUri(this, Uri.parse(oneStoreURI))
         }
         catch (e: Exception) {
             this.oneStoreDoc = null
         }
         val playStoreURI = prefs.getString(PREF_PLAYSTORE_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) try {
             this.playStoreDoc = DocumentFile.fromTreeUri(this, Uri.parse(playStoreURI))
         }
         catch (e: Exception) {
             this.playStoreDoc = null
         }
         val playStoreJpURI = prefs.getString(PREF_PLAYSTORE_JP_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) try {
             this.playStoreJpDoc = DocumentFile.fromTreeUri(this, Uri.parse(playStoreJpURI))
         }
         catch (e: Exception) {
             this.playStoreJpDoc = null
         }
         val fanzaURI = prefs.getString(PREF_FANZA_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) try {
             this.fanzaDoc = DocumentFile.fromTreeUri(this, Uri.parse(fanzaURI))
         }
         catch (e: Exception) {
@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         this.checkPermission(true)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             switches2[findViewById<Switch>(R.id.switch_filter_onestore)] = this.oneStoreDoc
             switches2[findViewById<Switch>(R.id.switch_filter_playstore)] = this.playStoreDoc
             switches2[findViewById<Switch>(R.id.switch_filter_playstore_jp)] = this.playStoreJpDoc
@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity() {
             findViewById<Button>(R.id.button_grant_playstore).visibility = View.GONE
             findViewById<Button>(R.id.button_grant_playstore_jp).visibility = View.GONE
             findViewById<Button>(R.id.button_grant_fanza).visibility = View.GONE
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             label.setText(R.string.tip_saf_selected)
 
             findViewById<Button>(R.id.button_grant_onestore).visibility = View.GONE
@@ -218,7 +218,7 @@ class MainActivity : AppCompatActivity() {
                 setTitle(R.string.GRANT_PERMISSION_TITLE)
                 setMessage(R.string.GRANT_PERMISSION_MESSAGE)
                 setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         val sm = context.getSystemService(STORAGE_SERVICE) as StorageManager
                         newPermission("Android%2Fdata%2Fcom%2Esmartjoy%2ELastOrigin%5FC", 991, sm)
                     }
@@ -232,7 +232,7 @@ class MainActivity : AppCompatActivity() {
                 setTitle(R.string.GRANT_PERMISSION_TITLE)
                 setMessage(R.string.GRANT_PERMISSION_MESSAGE)
                 setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         val sm = context.getSystemService(STORAGE_SERVICE) as StorageManager
                         newPermission("Android%2Fdata%2Fcom%2Esmartjoy%2ELastOrigin%5FG", 992, sm)
                     }
@@ -246,7 +246,7 @@ class MainActivity : AppCompatActivity() {
                 setTitle(R.string.GRANT_PERMISSION_TITLE)
                 setMessage(R.string.GRANT_PERMISSION_MESSAGE)
                 setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         val sm = context.getSystemService(STORAGE_SERVICE) as StorageManager
                         newPermission("Android%2Fdata%2Fcom%2Epig%2Elaojp%2Eaos", 993, sm)
                     }
@@ -260,7 +260,7 @@ class MainActivity : AppCompatActivity() {
                 setTitle(R.string.GRANT_PERMISSION_TITLE)
                 setMessage(R.string.GRANT_PERMISSION_MESSAGE)
                 setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         val sm = context.getSystemService(STORAGE_SERVICE) as StorageManager
                         newPermission("Android%2Fdata%2Fjp%2Eco%2Efanzagames%2Elastorigin%5Fr", 994, sm)
                     }
@@ -273,7 +273,7 @@ class MainActivity : AppCompatActivity() {
 
     // Granted 상황에 맞춰 사용 가능 갱신
     private fun updateSwitches() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             for ((switch, doc) in switches2) {
                 val usable = doc != null
 
@@ -304,7 +304,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun newPermission(path: String, code: Int, sm: StorageManager) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val intent = sm.primaryStorageVolume.createOpenDocumentTreeIntent()
 
             var uri =
@@ -527,7 +527,7 @@ class MainActivity : AppCompatActivity() {
     private fun DoPatch() {
         val patchBtn = findViewById<Button>(R.id.button_patch)
         CoroutineScope(Main).launch { patchBtn.isEnabled = false }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             PatcherSAF13(this, this.modDoc, this.switches2) { s -> this.Log(s) }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
             PatcherSAF(this, this.dataDoc, this.modDoc, this.switches) { s -> this.Log(s) }
