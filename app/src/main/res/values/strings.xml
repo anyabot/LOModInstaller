@@ -9,6 +9,16 @@
     <string name="platform_fanza_jp">JP Uncensored</string>
 
     <string name="patch_btn">Patch!</string>
+    <string name="clear_btn">Clear!</string>
+
+    <string name="CLEAR_TITLE">Confirmation</string>
+    <string name="CLEAR_MESSAGE">This Function is only used to remove Mods and fix Modding Error. Folders in Shared with the same name as those in the Mod Folder will be removed.
+        \n
+        After clearing, you must login again to redownload assets files.
+        \n
+        Are you sure you want to do this?
+    </string>
+    <string name="CLEAR_OK">OK</string>
 
     <string name="GRANT_PERIMSSION">Grant Permission</string>
     <string name="GRANT_PERMISSION_TITLE">Additional Permissions Required</string>
@@ -32,6 +42,8 @@
     <string name="COPY_DONE">Copied __data from %s</string>
     <string name="DEST_NO_DATA">__data does not exist in destination %s in Shared</string>
     <string name="SRC_NO_DATA">__data does not exist in source %s in Mod Folder</string>
+
+    <string name="DELETE_START">Deleting %s in Shared</string>
 
     <string name="WRONG_FOLDER_13">Wrong Folder Name</string>
     <string name="FAIL_FOLDER_13">Cannot Access Folder</string>

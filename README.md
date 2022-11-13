@@ -7,6 +7,7 @@ This project is experimental, and game patching is not supported by developers.
 
 **USE AT YOUR OWN RISK!**
 # Usage
+## Install Patch
 * Install the APK
 * Give Permissions to access files and folders
 * (For Android 10 or above) Tap **GRANT PERMISSION**, then **USE THIS FOLDER** in **Android/data** to allow access to Android Storage. 
@@ -14,6 +15,12 @@ This project is experimental, and game patching is not supported by developers.
 * Tap **SELECT MOD FOLDER** and select the folder holding all the Mods to be applied. 
   * The Mod Folder location should be shown right below the button.
 * Tap **PATCH!**
+## Remove / Fix Patch
+* Tap **Clear!** and Ok!
+* This Function is only used to remove Mods and fix Modding Error. 
+* Folders in Shared with the same name as those in the Mod Folder will be removed.
+* After clearing, you must login again to redownload assets files before modding those files again.
+* Does not work for Samsung Android 12? (Need more testings)
 # Attentions
 * Experimental, might not work on some phones. Contact me on Discord (Altter#7252) if you encounter any errors.
 * Make sure to let the game download all its assets before patching.

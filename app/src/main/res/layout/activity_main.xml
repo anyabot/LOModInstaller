@@ -209,18 +209,36 @@
 
         </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="5dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/button_clear"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:text="@string/clear_btn"
+            app:backgroundTint="#424242"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="5dp"
+            />
+
         <Button
             android:id="@+id/button_patch"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/patch_btn"
-            app:backgroundTint="#424242"
+            app:backgroundTint="#0000FF"
             app:icon="@drawable/ic_launcher_foreground"
             app:iconGravity="textStart"
             app:iconSize="40dp"
             app:iconTint="#FFFFFF"
-            app:iconTintMode="multiply" />
-
+            app:iconTintMode="multiply"
+            android:layout_weight="2"
+            android:layout_marginHorizontal="5dp"/>
+    </LinearLayout>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

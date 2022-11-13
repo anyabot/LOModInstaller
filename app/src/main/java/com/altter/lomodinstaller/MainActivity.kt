@@ -152,6 +152,17 @@ class MainActivity : AppCompatActivity() {
         else findViewById<TextView>(R.id.mod_text).text = "Current Mod Folder: " + this.modFolder
         findViewById<Button>(R.id.button_patch).setOnClickListener { this.BeforePatch() }
         findViewById<Button>(R.id.button_folder).setOnClickListener { this.SelectFolder() }
+        findViewById<Button>(R.id.button_clear).setOnClickListener {
+            AlertDialog.Builder(this).apply {
+                setTitle(R.string.CLEAR_TITLE)
+                setMessage(R.string.CLEAR_MESSAGE)
+                setPositiveButton(R.string.CLEAR_OK) { _, _ ->
+                    BeforeClear()
+                }
+            }
+                .create()
+                .show()
+        }
         findViewById<Button>(R.id.button_grant).setOnClickListener {
             AlertDialog.Builder(this).apply {
                 setTitle(R.string.GRANT_PERMISSION_TITLE)
@@ -519,6 +530,11 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Default).launch { this@MainActivity.DoPatch() }
     }
 
+    private fun BeforeClear() {
+        // 혹시 전처리가 필요하면 여기 추가하면 됨
+        CoroutineScope(Default).launch { this@MainActivity.DoClear() }
+    }
+
     private fun SelectFolder() {
         val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).putExtra(DocumentsContract.EXTRA_INITIAL_URI, DocumentsContract.buildTreeDocumentUri("com.android.externalstorage.documents", "primary:Android/data"))
         startActivityForResult(i, 9999)
@@ -528,13 +544,26 @@ class MainActivity : AppCompatActivity() {
         val patchBtn = findViewById<Button>(R.id.button_patch)
         CoroutineScope(Main).launch { patchBtn.isEnabled = false }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            PatcherSAF13(this, this.modDoc, this.switches2) { s -> this.Log(s) }
+            PatcherSAF13(this, this.modDoc, this.switches2, 1) { s -> this.Log(s) }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            PatcherSAF(this, this.dataDoc, this.modDoc, this.switches) { s -> this.Log(s) }
+            PatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 1) { s -> this.Log(s) }
         else
-            Patcher(this, this.storages, this.modFolder, this.switches) { s -> this.Log(s) }
+            Patcher(this, this.storages, this.modFolder, this.switches, 1) { s -> this.Log(s) }
 
         CoroutineScope(Main).launch { patchBtn.isEnabled = true }
+    }
+
+    private fun DoClear() {
+        val clearBtn = findViewById<Button>(R.id.button_clear)
+        CoroutineScope(Main).launch { clearBtn.isEnabled = false }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            PatcherSAF13(this, this.modDoc, this.switches2, 2) { s -> this.Log(s) }
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            PatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 2) { s -> this.Log(s) }
+        else
+            Patcher(this, this.storages, this.modFolder, this.switches, 2) { s -> this.Log(s) }
+
+        CoroutineScope(Main).launch { clearBtn.isEnabled = true }
     }
 
     override fun onRequestPermissionsResult(
