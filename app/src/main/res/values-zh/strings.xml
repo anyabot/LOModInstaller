@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">LO模组管理器</string>
+    <string name="app_require_saf_permission">※对于Android 10或更高版本,需要访问存储空间的权限.请授予访问Android/data.</string>
+    <string name="tip_saf_selected">※如果权限被成功授予,开关的状态应该是可切换的.</string>
+
+    <string name="platform_onestore">韩服(无和谐)</string>
+    <string name="platform_playstore">韩服(谷歌版)</string>
+    <string name="platform_playstore_jp">日服(谷歌版)</string>
+    <string name="platform_fanza_jp">日服(Fanza)</string>
+
+    <string name="patch_btn">打补丁!</string>
+    <string name="clear_btn">清除!</string>
+
+    <string name="CLEAR_TITLE">确认</string>
+    <string name="CLEAR_MESSAGE">此功能仅用于删除Mod和修复Mod导致的错误.这将删除游戏目录"Shared"中与Mod文件夹中同名的文件夹.
+        \n
+        清除后，您必须重新登录以重新下载资源文件.
+        \n
+        您确定要这么做吗?
+    </string>
+    <string name="CLEAR_OK">完毕</string>
+
+    <string name="GRANT_PERIMSSION">授予权限</string>
+    <string name="GRANT_PERMISSION_TITLE">需要额外权限</string>
+    <string name="GRANT_PERMISSION_MESSAGE">需要权限来访问存储空间.</string>
+    <string name="GRANT_PERMISSION_OK">完毕</string>
+    <string name="GRANT_INVALID_PATH">您请求了一个无效的路径.请再试一次.</string>
+    <string name="GRANT_FAILED">授权失败.请再试一次.</string>
+    <string name="GRANT_SUCCESSFULLY">授权成功.</string>
+    <string name="GRANT_ALREADY_GRANTED">您已经授权了.</string>
+
+    <string name="SELECT_MOD">选择MOD所处文件夹</string>
+    <string name="MOD_WARNING">MOD文件夹是保存要应用的MOD的文件夹，而不是要替换的文件夹.</string>
+
+    <string name="COPY_TRY">尝试从 %s 复制 __data</string>
+    <string name="MORE_THAN_ONE">%s 中包含不止一个文件或文件夹</string>
+    <string name="NOT_DIRECTORY">%s 不是一个文件夹</string>
+    <string name="NOT_DIRECTORY_2">%s 中的 %s 不是一个文件夹</string>
+    <string name="NO_MOD_DOC">未找到Mod文件夹</string>
+    <string name="NO_DATA_DOC">未找到Data文件夹</string>
+    <string name="NO_DEST">%s 文件夹在Shared中不存在</string>
+    <string name="COPY_DONE">已从 %s 复制 __data</string>
+    <string name="DEST_NO_DATA">Shared文件夹中的目标 ％s 中不存在 __data</string>
+    <string name="SRC_NO_DATA">Mod文件夹中的源 ％s 中不存在 __data</string>
+
+    <string name="DELETE_START">正在删除Shared文件夹中的 %s</string>
+
+    <string name="WRONG_FOLDER_13">文件夹名称错误</string>
+    <string name="FAIL_FOLDER_13">文件夹访问失败</string>
+</resources>
