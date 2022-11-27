@@ -19,8 +19,8 @@ android {
         applicationId "com.altter.lomodinstaller"
         minSdkVersion 16
         targetSdkVersion 33
-        versionCode 10003
-        versionName "1.0.3b"
+        versionCode 10004
+        versionName "1.0.4"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

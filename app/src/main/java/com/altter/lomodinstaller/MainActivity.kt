@@ -507,16 +507,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private val androidTreeUri = DocumentsContract.buildTreeDocumentUri(
-        "com.android.externalstorage.documents", "primary:Android"
-    )
-
-    private fun checkIfGotAccess(): Boolean {
-        return contentResolver.persistedUriPermissions.indexOfFirst { uriPermission ->
-            uriPermission.uri.equals(androidTreeUri) && uriPermission.isReadPermission && uriPermission.isWritePermission
-        } >= 0
-    }
-
     @SuppressLint("SetTextI18n")
     fun Log(text: String) {
         CoroutineScope(Main).launch {
@@ -577,13 +567,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkPermission(need_request: Boolean) {
-        val cleanBtn = findViewById<Button>(R.id.button_patch)
-
+        val patchBtn = findViewById<Button>(R.id.button_patch)
         val permissions = arrayOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU &&
             permissions.any { p ->
                 ContextCompat.checkSelfPermission(
                     this,
@@ -591,11 +580,11 @@ class MainActivity : AppCompatActivity() {
                 ) != PackageManager.PERMISSION_GRANTED
             }
         ) {
-            cleanBtn.isEnabled = false
+            patchBtn.isEnabled = false
             if (need_request)
                 this.requestPermission(permissions)
         } else
-            cleanBtn.isEnabled = true
+            patchBtn.isEnabled = true
 
         this.updateSwitches()
     }

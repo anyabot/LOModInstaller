@@ -1,7 +1,7 @@
 # Overview 
 A simple APK to quickly apply Mods for the game Last Origin.
 
-Require Android version 4.1 or above. Does not work with Android 13.
+Require Android version 4.1 or above. Tested and working for Android 12 & 13.
 
 This project is experimental, and game patching is not supported by developers. 
 
@@ -10,8 +10,9 @@ This project is experimental, and game patching is not supported by developers.
 ## Install Patch
 * Install the APK
 * Give Permissions to access files and folders
-* (For Android 10 or above) Tap **GRANT PERMISSION**, then **USE THIS FOLDER** in **Android/data** to allow access to Android Storage. 
-  * The switches for versions of the Game should be toggleale now.
+  * (For Android 10 or above) Tap **GRANT PERMISSION**, then **USE THIS FOLDER** in **Android/data** to allow access to Android Storage. 
+  * (For Android 13) Tap **GRANT PERMISSION** for the game version you're using, then **USE THIS FOLDER** to allow access to Android Storage. 
+    * The switches for versions of the Game should be toggleale now.
 * Tap **SELECT MOD FOLDER** and select the folder holding all the Mods to be applied. 
   * The Mod Folder location should be shown right below the button.
 * Tap **PATCH!**
