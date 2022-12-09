@@ -1,7 +1,7 @@
 # Overview 
 A simple APK to quickly apply Mods for the game Last Origin.
 
-Require Android version 4.1 or above. Tested and working for Android 12 & 13.
+Require Android version 5 or above. Tested and working for Android 12 & 13.
 
 This project is experimental, and game patching is not supported by developers. 
 
