@@ -31,6 +31,8 @@
 
     <string name="SELECT_MOD">SELECT MOD FOLDER</string>
     <string name="MOD_WARNING">The Mod Folder is the Folder holding mods to be applied, NOT the one to be replaced.</string>
+    <string name="EMPTY_MOD_FOLDER">The Mod Folder is the Folder holding mods to be applied, NOT the one to be replaced.</string>
+    <string name="CURRENT_MOD_FOLDER">Current Mod Folder: %s</string>
 
     <string name="COPY_TRY">Try to copy __data from %s</string>
     <string name="MORE_THAN_ONE">More than one file or folder in %s</string>

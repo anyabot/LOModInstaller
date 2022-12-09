@@ -18,7 +18,6 @@ import android.widget.Button
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -148,8 +147,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         this.updateSwitches()
-        if (this.modFolder == "") findViewById<TextView>(R.id.mod_text).text = "Please Select Mod Folder"
-        else findViewById<TextView>(R.id.mod_text).text = "Current Mod Folder: " + this.modFolder
+        if (this.modFolder == "") findViewById<TextView>(R.id.mod_text).text = this.getString(R.string.EMPTY_MOD_FOLDER)
+        else findViewById<TextView>(R.id.mod_text).text = String.format(this.getString(R.string.CURRENT_MOD_FOLDER), this.modFolder)
         findViewById<Button>(R.id.button_patch).setOnClickListener { this.BeforePatch() }
         findViewById<Button>(R.id.button_folder).setOnClickListener { this.SelectFolder() }
         findViewById<Button>(R.id.button_clear).setOnClickListener {
@@ -199,8 +198,7 @@ class MainActivity : AppCompatActivity() {
                         val intent = Intent("android.intent.action.OPEN_DOCUMENT_TREE").apply {
                             flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
                                     Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-                                flags = flags or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                            flags = flags or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
 
                             putExtra("android.content.extra.SHOW_ADVANCED", true)
 
@@ -217,8 +215,9 @@ class MainActivity : AppCompatActivity() {
 
                             }
                         }
+                        startActivityForResult(intent, 44)
                     }
-                    startActivityForResult(intent, 44)
+
                 }
             }
                 .create()
@@ -340,18 +339,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("WrongViewCast")
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == 44 && resultCode == Activity.RESULT_OK) {
             val uri = data?.data ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-            }
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
             if (doc != null) {
@@ -363,12 +359,10 @@ class MainActivity : AppCompatActivity() {
         }
         else if (requestCode == 991 && resultCode == Activity.RESULT_OK) {
             val uri = data?.data ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-            }
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
             if (doc == null) Log(this.getString(R.string.FAIL_FOLDER_13))
@@ -377,11 +371,11 @@ class MainActivity : AppCompatActivity() {
                 if (doc.name == "com.smartjoy.LastOrigin_C") {
                     this.oneStoreDoc = doc
                     prefs.edit().putString(PREF_ONESTORE_URI, doc.uri.toString()).apply()
-                    var switch = findViewById<Switch>(R.id.switch_filter_onestore)
+                    val switch = findViewById<Switch>(R.id.switch_filter_onestore)
                     switches2[switch] = this.oneStoreDoc
                     switch.apply {
-                        isChecked = doc != null
-                        isEnabled = doc != null
+                        isChecked = true
+                        isEnabled = true
                     }
                 }
                 else {
@@ -392,12 +386,10 @@ class MainActivity : AppCompatActivity() {
         }
         else if (requestCode == 992 && resultCode == Activity.RESULT_OK) {
             val uri = data?.data ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-            }
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
             if (doc == null) Log(this.getString(R.string.FAIL_FOLDER_13))
@@ -406,11 +398,11 @@ class MainActivity : AppCompatActivity() {
                 if (doc.name == "com.smartjoy.LastOrigin_G") {
                     this.playStoreDoc = doc
                     prefs.edit().putString(PREF_PLAYSTORE_URI, doc.uri.toString()).apply()
-                    var switch = findViewById<Switch>(R.id.switch_filter_playstore)
+                    val switch = findViewById<Switch>(R.id.switch_filter_playstore)
                     switches2[switch] = this.playStoreDoc
                     switch.apply {
-                        isChecked = doc != null
-                        isEnabled = doc != null
+                        isChecked = true
+                        isEnabled = true
                     }
                 }
                 else {
@@ -421,12 +413,10 @@ class MainActivity : AppCompatActivity() {
         }
         else if (requestCode == 993 && resultCode == Activity.RESULT_OK) {
             val uri = data?.data ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-            }
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
             if (doc == null) Log(this.getString(R.string.FAIL_FOLDER_13))
@@ -435,11 +425,11 @@ class MainActivity : AppCompatActivity() {
                 if (doc.name == "com.pig.laojp.aos") {
                     this.playStoreJpDoc = doc
                     prefs.edit().putString(PREF_PLAYSTORE_JP_URI, doc.uri.toString()).apply()
-                    var switch = findViewById<Switch>(R.id.switch_filter_playstore_jp)
+                    val switch = findViewById<Switch>(R.id.switch_filter_playstore_jp)
                     switches2[switch] = this.playStoreJpDoc
                     switch.apply {
-                        isChecked = doc != null
-                        isEnabled = doc != null
+                        isChecked = true
+                        isEnabled = true
                     }
                 }
                 else {
@@ -450,12 +440,10 @@ class MainActivity : AppCompatActivity() {
         }
         else if (requestCode == 994 && resultCode == Activity.RESULT_OK) {
             val uri = data?.data ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-            }
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
             if (doc == null) Log(this.getString(R.string.FAIL_FOLDER_13))
@@ -464,12 +452,11 @@ class MainActivity : AppCompatActivity() {
                 if (doc.name == "jp.co.fanzagames.lastorigin_r") {
                     this.fanzaDoc = doc
                     prefs.edit().putString(PREF_FANZA_URI, doc.uri.toString()).apply()
-                    switches2[findViewById<Switch>(R.id.switch_filter_fanza)] = this.fanzaDoc
-                    var switch = findViewById<Switch>(R.id.switch_filter_fanza)
+                    val switch = findViewById<Switch>(R.id.switch_filter_fanza)
                     switches2[switch] = this.fanzaDoc
                     switch.apply {
-                        isChecked = doc != null
-                        isEnabled = doc != null
+                        isChecked = true
+                        isEnabled = true
                     }
                 }
                 else {
@@ -486,8 +473,8 @@ class MainActivity : AppCompatActivity() {
                         uri,
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
-                    val file = File(uri.path)
-//                    uri.path?.let { Log(it) }
+                    val file = uri.path?.let { File(it) } ?: return
+                    //                    uri.path?.let { Log(it) }
 
                     val doc = DocumentFile.fromTreeUri(this, uri)
                     if (doc != null) {
@@ -499,8 +486,8 @@ class MainActivity : AppCompatActivity() {
 
                     this.modFolder = split[1] + "/"
                     prefs.edit().putString(PREF_MOD_FOLDER, this.modFolder).apply()
-                    findViewById<TextView>(R.id.mod_text).text = "Current Mod Folder: " + this.modFolder
-                    val f = File(this.modFolder)
+                    findViewById<TextView>(R.id.mod_text).text = String.format(this.getString(R.string.CURRENT_MOD_FOLDER), this.modFolder)
+//                    val f = File(this.modFolder)
                 }
             }
         }
@@ -526,7 +513,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun SelectFolder() {
-        val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).putExtra(DocumentsContract.EXTRA_INITIAL_URI, DocumentsContract.buildTreeDocumentUri("com.android.externalstorage.documents", "primary:Android/data"))
+        val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         startActivityForResult(i, 9999)
     }
 
