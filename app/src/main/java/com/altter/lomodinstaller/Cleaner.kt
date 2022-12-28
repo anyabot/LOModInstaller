@@ -90,9 +90,13 @@ fun Patcher(
     Log: (String) -> Unit
 ) {
     fun findMatchedStorageFileList(path: String): Array<File>? {
+        if (path.contains("/storage/emulated/0")) {
+            val f = File(path)
+            if (f.exists()) return f.listFiles()
+        }
         for (storage in storages) {
-            val target = when {
-                storage == "emulated" -> "emulated/0"
+            val target = when (storage) {
+                "emulated" -> "emulated/0"
                 else -> storage
             }
             val f = File("/storage/$target/$path")
@@ -105,8 +109,8 @@ fun Patcher(
 
     fun findMatchedStorageName(path: String, name: String): File? {
         for (storage in storages) {
-            val target = when {
-                storage == "emulated" -> "emulated/0"
+            val target = when (storage) {
+                "emulated" -> "emulated/0"
                 else -> storage
             }
             val f = File("/storage/$target/$path/$name")
