@@ -557,3 +557,225 @@ fun PatcherSAF13(
     }
     Log("Done")
 }
+
+@RequiresApi(Build.VERSION_CODES.N)
+fun PatcherShizuku(
+    context: Context,
+    modPath: String?,
+    switches: HashMap<Switch, String>,
+    mode: Int,
+    Log: (String) -> Unit,
+    Runner: (String) -> String
+) {
+    if (modPath == null) {
+        Log(context.getString(R.string.NO_MOD_DOC))
+        return
+    }
+    val realModPath = "/storage/emulated/0/$modPath"
+    var txt = Runner("ls $realModPath")
+    if (txt.contains("No such file or directory")) {
+        Log(context.getString(R.string.NO_MOD_DOC))
+        return
+    }
+    var modList = txt.split("\n")
+    modList = modList.filter { s -> s.isNotEmpty() }
+
+    Log("Start")
+    for ((switch, path) in switches) {
+        if (!switch.isChecked) continue // 스위치 체크 안된거 넘어가기
+        for (target in modList) {
+            if (target == null) continue
+            txt = Runner("ls $realModPath/$target/__data")
+            if (txt.contains("No such file or directory")) {
+                Log(String.format(context.getString(R.string.SRC_NO_DATA), target))
+                continue
+            }
+            txt = Runner("ls $path/files/UnityCache/Shared/${target}")
+            if (txt.contains("No such file or directory")) {
+                Log(String.format(context.getString(R.string.NO_DEST), target))
+                continue
+            }
+            if (mode == 1) {
+                Log(String.format(context.getString(R.string.COPY_TRY), target))
+                var listDir = txt.split("\n")
+                listDir = listDir.filter { s -> s.isNotEmpty() }
+                if (listDir.size > 1) {
+                    Log(
+                        String.format(
+                            context.getString(R.string.MORE_THAN_ONE),
+                            target
+                        )
+                    )
+                    continue
+                }
+                var gibberish = listDir[0]
+                txt = Runner("ls $path/files/UnityCache/Shared/${target}/$gibberish")
+                if (txt.contains("No such file or directory")) {
+                    Log(String.format(context.getString(R.string.NOT_DIRECTORY_2), gibberish, target))
+                    continue
+                }
+                txt = Runner("ls $path/files/UnityCache/Shared/${target}/$gibberish/__data")
+                if (txt.contains("No such file or directory")) {
+                    Log(String.format(context.getString(R.string.DEST_NO_DATA), target))
+                    continue
+                }
+
+                Runner("cp $realModPath/$target/__data $path/files/UnityCache/Shared/${target}/$gibberish/__data")
+                Log(String.format(context.getString(R.string.COPY_DONE), target))
+            }
+            else if (mode == 2) {
+                Log(String.format(context.getString(R.string.DELETE_START), target))
+                Runner("rm -r $path/files/UnityCache/Shared/${target}")
+            }
+
+
+//            var temp_uri: Uri? = null
+//            val temp_id = uripath.substringAfterLast("/document/") + "/" + target.name
+//
+//            temp_uri = DocumentsContract.buildDocumentUriUsingTree(
+//                uri,
+//                temp_id
+//            )
+//            if (temp_uri == null) continue
+//            val newtarget = DocumentFile.fromTreeUri(context, temp_uri)
+//            if (newtarget == null) {
+//                Log(String.format(context.getString(R.string.NO_DEST), target.name))
+//                continue
+//            }
+//            if (!newtarget.exists()) {
+//                Log(String.format(context.getString(R.string.NO_DEST), target.name))
+//                continue
+//            }
+//            if (!newtarget.isDirectory) {
+//                Log(String.format(context.getString(R.string.NOT_DIRECTORY), target.name))
+//                continue
+//            }
+//            if (mode == 1) {
+//                var check = false
+//                for (f in target.listFiles()) {
+//                    if (f == null) continue
+//                    if (f.isDirectory) {
+//                        for (f2 in f.listFiles()) {
+//                            if (f2.name != "__data") continue
+//                            Log(String.format(context.getString(R.string.COPY_TRY), target.name))
+//                            check = true
+//                            try {
+//                                val targetList = newtarget.listFiles()
+//                                if (targetList.size != 1) {
+//                                    Log(
+//                                        String.format(
+//                                            context.getString(R.string.MORE_THAN_ONE),
+//                                            newtarget.name
+//                                        )
+//                                    )
+//                                    continue
+//                                }
+//                                val gibberish = targetList[0]
+//                                var report = false
+//                                if (gibberish.isDirectory) {
+//                                    for (dat in gibberish.listFiles()) {
+//                                        if (dat.name == "__data") {
+//                                            report = true
+//                                            if (xcopy(
+//                                                    context,
+//                                                    f2,
+//                                                    dat
+//                                                )
+//                                            ) Log(
+//                                                String.format(
+//                                                    context.getString(R.string.COPY_DONE),
+//                                                    target.name
+//                                                )
+//                                            )
+//                                        }
+//                                    }
+//                                } else {
+//                                    Log(
+//                                        String.format(
+//                                            context.getString(R.string.NOT_DIRECTORY_2),
+//                                            gibberish.name,
+//                                            target.name
+//                                        )
+//                                    )
+//                                    continue
+//                                }
+//                                if (!report) Log(
+//                                    String.format(
+//                                        context.getString(R.string.DEST_NO_DATA),
+//                                        target.name
+//                                    )
+//                                )
+//                            } catch (e: Exception) {
+//                                Log(e.toString())
+//                            }
+//                        }
+//                    }
+//                    if (f.name != "__data") continue
+//                    Log(String.format(context.getString(R.string.COPY_TRY), target.name))
+//                    check = true
+//                    try {
+//                        val targetList = newtarget.listFiles()
+//                        if (targetList.size != 1) {
+//                            Log(
+//                                String.format(
+//                                    context.getString(R.string.MORE_THAN_ONE),
+//                                    newtarget.name
+//                                )
+//                            )
+//                            continue
+//                        }
+//                        val gibberish = targetList[0]
+//                        var report = false
+//                        if (gibberish.isDirectory) {
+//                            for (dat in gibberish.listFiles()) {
+//                                if (dat.name == "__data") {
+//                                    report = true
+//                                    if (xcopy(
+//                                            context,
+//                                            f,
+//                                            dat
+//                                        )
+//                                    ) Log(
+//                                        String.format(
+//                                            context.getString(R.string.COPY_DONE),
+//                                            target.name
+//                                        )
+//                                    )
+//                                }
+//                            }
+//                        } else {
+//                            Log(
+//                                String.format(
+//                                    context.getString(R.string.NOT_DIRECTORY_2),
+//                                    gibberish.name,
+//                                    target.name
+//                                )
+//                            )
+//                            continue
+//                        }
+//                        if (!report) Log(
+//                            String.format(
+//                                context.getString(R.string.DEST_NO_DATA),
+//                                target.name
+//                            )
+//                        )
+//                    } catch (e: Exception) {
+//                        Log(e.toString())
+//                    }
+//                }
+//                if (!check) Log(String.format(context.getString(R.string.SRC_NO_DATA), target.name))
+//            }
+//            else if (mode == 2) {
+//                try {
+//                    Log(String.format(context.getString(R.string.DELETE_START), newtarget.name))
+//                    DocumentsContract.deleteDocument(context.contentResolver, newtarget.uri)
+//                }
+//                catch (e: Exception) {
+//                    Log(e.toString())
+//                }
+//            }
+        }
+
+    }
+    Log("Done")
+}

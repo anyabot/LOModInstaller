@@ -4,23 +4,15 @@ plugins {
 }
 
 android {
-    signingConfigs {
-        debug {
-            storeFile file('C:\\Users\\TuLeThanh\\Downloads\\LO\\Signaturre\\signature.jks')
-            storePassword 'LePhuc8689A'
-            keyPassword 'LePhuc8689A'
-            keyAlias 'key2'
-        }
-    }
-    compileSdkVersion 33
+    compileSdkVersion 34
     buildToolsVersion "30.0.3"
 
     defaultConfig {
         applicationId "com.altter.lomodinstaller"
-        minSdkVersion 21
-        targetSdkVersion 33
-        versionCode 10005
-        versionName "1.0.5"
+        minSdkVersion 24
+        targetSdkVersion 30
+        versionCode 10100
+        versionName "1.1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -40,6 +32,9 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    buildFeatures {
+        aidl true
+    }
     namespace 'com.altter.lomodinstaller'
 }
 
@@ -57,4 +52,8 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'commons-io:commons-io:2.4'
+    def shizuku_version = '13.1.5'
+
+    implementation "dev.rikka.shizuku:api:$shizuku_version"
+    implementation "dev.rikka.shizuku:provider:$shizuku_version"
 }

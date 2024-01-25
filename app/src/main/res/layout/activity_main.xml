@@ -37,9 +37,20 @@
                 android:layout_marginBottom="10dp"
                 android:text="@string/GRANT_PERIMSSION" />
 
-
             <TextView
                 android:id="@+id/tip_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/button_shizuku"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="@string/GRANT_PERIMSSION_SHIZUKU" />
+
+            <TextView
+                android:id="@+id/tip_text_shizuku"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 

@@ -2,6 +2,7 @@
     <string name="app_name">LO Mod Installer</string>
     <string name="app_require_saf_permission">※ For Android 10 or higher, permission to access the storage is required. Please grant access to Android/data folder</string>
     <string name="tip_saf_selected">※ If access was granted successfully, the switch(es) should be toggleable.</string>
+    <string name="tip_shizuku_granted">※ Shizuku Permission Granted.</string>
 
     <string name="platform_onestore">KR Uncensored</string>
     <string name="platform_playstore">KR Censored</string>
@@ -21,6 +22,7 @@
     <string name="CLEAR_OK">OK</string>
 
     <string name="GRANT_PERIMSSION">Grant Permission</string>
+    <string name="GRANT_PERIMSSION_SHIZUKU">Grant Shizuku Permission</string>
     <string name="GRANT_PERMISSION_TITLE">Additional Permissions Required</string>
     <string name="GRANT_PERMISSION_MESSAGE">Needs Permissions to access Storage.</string>
     <string name="GRANT_PERMISSION_OK">OK</string>

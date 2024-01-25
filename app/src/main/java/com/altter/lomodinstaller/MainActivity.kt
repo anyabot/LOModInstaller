@@ -4,13 +4,16 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.os.storage.StorageManager
 import android.provider.DocumentsContract
 import android.view.View
@@ -18,6 +21,7 @@ import android.widget.Button
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -26,16 +30,22 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
+import rikka.shizuku.Shizuku
+import rikka.shizuku.Shizuku.UserServiceArgs
+import rikka.shizuku.ShizukuProvider
 import java.io.File
 
 
 class MainActivity : AppCompatActivity() {
+    private var mUserService: IUserService? = null
     private val switches: HashMap<Switch, String> = HashMap()
     private val switches2: HashMap<Switch, DocumentFile?> = HashMap()
 
     private val prefs: SharedPreferences by lazy {
         getSharedPreferences("GRANTED_URIS", Context.MODE_PRIVATE)
     }
+
+    private val SHIZUKU_CODE = 10023
 
     private val PREF_MOD_FOLDER = "pref_mod_folder"
     private val PREF_MOD_URI = "pref_mod_uri"
@@ -53,13 +63,27 @@ class MainActivity : AppCompatActivity() {
     private var playStoreJpDoc: DocumentFile? = null
     private var fanzaDoc: DocumentFile? = null
 
+    private var shizukuPermission = false
+    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
+            if (iBinder == null || !iBinder.pingBinder()) {
+                return
+            }
+            mUserService = IUserService.Stub.asInterface(iBinder)
+            RecheckShizuku()
+        }
+
+        override fun onServiceDisconnected(componentName: ComponentName) {}
+    }
+
     private val storages: List<String> =
         File("/storage").listFiles()?.filter { it.name != "self" }?.map { it.name } ?: listOf()
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        ensureUserService()
         val tempmodFolder = prefs.getString(PREF_MOD_FOLDER, null)
         if (tempmodFolder != null) this.modFolder = tempmodFolder
         val tempmodURI = prefs.getString(PREF_MOD_URI, null)
@@ -129,7 +153,6 @@ class MainActivity : AppCompatActivity() {
         val label = findViewById<TextView>(R.id.tip_text)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             findViewById<Button>(R.id.button_grant).visibility = View.GONE
-
             findViewById<Button>(R.id.button_grant_onestore).visibility = View.GONE
             findViewById<Button>(R.id.button_grant_playstore).visibility = View.GONE
             findViewById<Button>(R.id.button_grant_playstore_jp).visibility = View.GONE
@@ -145,6 +168,8 @@ class MainActivity : AppCompatActivity() {
             label.setText(R.string.tip_saf_selected)
             findViewById<Button>(R.id.button_grant).visibility = View.GONE
         }
+
+        RecheckShizuku()
 
         this.updateSwitches()
         if (this.modFolder == "") findViewById<TextView>(R.id.mod_text).text = this.getString(R.string.EMPTY_MOD_FOLDER)
@@ -223,6 +248,13 @@ class MainActivity : AppCompatActivity() {
                 .create()
                 .show()
         }
+        findViewById<Button>(R.id.button_shizuku).setOnClickListener {
+            if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
+                requestPermissions(arrayOf(ShizukuProvider.PERMISSION), SHIZUKU_CODE)
+            } else {
+                Shizuku.requestPermission(SHIZUKU_CODE)
+            }
+        }
         findViewById<Button>(R.id.button_grant_onestore).setOnClickListener {
             AlertDialog.Builder(this).apply {
                 setTitle(R.string.GRANT_PERMISSION_TITLE)
@@ -283,7 +315,65 @@ class MainActivity : AppCompatActivity() {
 
     // Granted 상황에 맞춰 사용 가능 갱신
     private fun updateSwitches() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (ShizukuAvailable()) {
+            var tempSwitch = findViewById<Switch>(R.id.switch_filter_onestore)
+            if (!RunShizukuCommand("ls /storage/emulated/0/Android/data/com.smartjoy.LastOrigin_C").contains("No such file or directory")) {
+                switches[tempSwitch] = "/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_C"
+                tempSwitch.apply {
+                    isChecked = true
+                    isEnabled = true
+                }
+            }
+            else {
+                tempSwitch.apply {
+                    isChecked = false
+                    isEnabled = false
+                }
+            }
+            tempSwitch = findViewById<Switch>(R.id.switch_filter_playstore)
+            if (!RunShizukuCommand("ls /storage/emulated/0/Android/data/com.smartjoy.LastOrigin_G").contains("No such file or directory")) {
+                switches[tempSwitch] = "/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_G"
+                tempSwitch.apply {
+                    isChecked = true
+                    isEnabled = true
+                }
+            }
+            else {
+                tempSwitch.apply {
+                    isChecked = false
+                    isEnabled = false
+                }
+            }
+            tempSwitch = findViewById<Switch>(R.id.switch_filter_playstore_jp)
+            if (!RunShizukuCommand("ls /storage/emulated/0/Android/data/com.com.pig.laojp.aos").contains("No such file or directory")) {
+                switches[tempSwitch] = "/storage/emulated/0/Android/data/com.pig.laojp.aos"
+                tempSwitch.apply {
+                    isChecked = true
+                    isEnabled = true
+                }
+            }
+            else {
+                tempSwitch.apply {
+                    isChecked = false
+                    isEnabled = false
+                }
+            }
+            tempSwitch = findViewById<Switch>(R.id.switch_filter_fanza)
+            if (!RunShizukuCommand("ls /storage/emulated/0/Android/data/jp.co.fanzagames.lastorigin_r").contains("No such file or directory")) {
+                switches[tempSwitch] = "/storage/emulated/0/Android/data/jp.co.fanzagames.lastorigin_r"
+                tempSwitch.apply {
+                    isChecked = true
+                    isEnabled = true
+                }
+            }
+            else {
+                tempSwitch.apply {
+                    isChecked = false
+                    isEnabled = false
+                }
+            }
+        }
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             for ((switch, doc) in switches2) {
                 val usable = doc != null
 
@@ -520,7 +610,10 @@ class MainActivity : AppCompatActivity() {
     private fun DoPatch() {
         val patchBtn = findViewById<Button>(R.id.button_patch)
         CoroutineScope(Main).launch { patchBtn.isEnabled = false }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        if (ShizukuAvailable()) {
+            PatcherShizuku(this, this.modFolder, this.switches, 1, { s -> this.Log(s) }, { s -> this.RunShizukuCommand(s) })
+        }
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             PatcherSAF13(this, this.modDoc, this.switches2, 1) { s -> this.Log(s) }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
             PatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 1) { s -> this.Log(s) }
@@ -533,7 +626,10 @@ class MainActivity : AppCompatActivity() {
     private fun DoClear() {
         val clearBtn = findViewById<Button>(R.id.button_clear)
         CoroutineScope(Main).launch { clearBtn.isEnabled = false }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        if (ShizukuAvailable()) {
+            PatcherShizuku(this, this.modFolder, this.switches, 2, { s -> this.Log(s) }, { s -> this.RunShizukuCommand(s) })
+        }
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             PatcherSAF13(this, this.modDoc, this.switches2, 2) { s -> this.Log(s) }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
             PatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 2) { s -> this.Log(s) }
@@ -549,9 +645,14 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 0)
+        if (requestCode == 0) {
             this.checkPermission(false)
+        }
+        else if (requestCode == SHIZUKU_CODE) {
+            RecheckShizuku()
+        }
     }
+
 
     private fun checkPermission(need_request: Boolean) {
         val patchBtn = findViewById<Button>(R.id.button_patch)
@@ -592,5 +693,60 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    fun ensureUserService(): Boolean {
+        if (mUserService != null) {
+            return true
+        }
+        val mUserServiceArgs = UserServiceArgs(
+            ComponentName(
+                BuildConfig.APPLICATION_ID,
+                UserService::class.java.name
+            )
+        )
+            .daemon(false)
+            .processNameSuffix("service")
+            .debuggable(BuildConfig.DEBUG)
+            .version(BuildConfig.VERSION_CODE)
+        Shizuku.bindUserService(mUserServiceArgs, mServiceConnection)
+        return false
+    }
+
+    private fun RecheckShizuku() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P || !Shizuku.pingBinder()) {
+            findViewById<Button>(R.id.button_shizuku).visibility = View.GONE
+            findViewById<TextView>(R.id.tip_text_shizuku).visibility = View.GONE
+        }
+        else {
+            findViewById<Button>(R.id.button_grant).visibility = View.GONE
+            findViewById<Button>(R.id.button_grant_onestore).visibility = View.GONE
+            findViewById<Button>(R.id.button_grant_playstore).visibility = View.GONE
+            findViewById<Button>(R.id.button_grant_playstore_jp).visibility = View.GONE
+            findViewById<Button>(R.id.button_grant_fanza).visibility = View.GONE
+            findViewById<TextView>(R.id.tip_text).visibility = View.GONE
+            val shizukuLabel = findViewById<TextView>(R.id.tip_text_shizuku)
+            shizukuPermission = if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
+                checkSelfPermission(ShizukuProvider.PERMISSION) == PackageManager.PERMISSION_GRANTED
+            } else {
+                Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+            }
+            if (shizukuPermission) {
+                shizukuLabel.setText(R.string.tip_saf_selected)
+                updateSwitches()
+            };
+            else shizukuLabel.visibility = View.GONE;
+        }
+    }
+
+    public fun ShizukuAvailable(): Boolean {
+        return shizukuPermission;
+    }
+
+    public fun RunShizukuCommand(cmd: String): String {
+        ensureUserService()
+        val res = mUserService?.runShellCommand(cmd)
+        return res.toString()
+
     }
 }
