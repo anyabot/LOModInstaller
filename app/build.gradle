@@ -10,6 +10,7 @@ android {
     defaultConfig {
         applicationId "com.altter.lomodinstaller"
         minSdkVersion 24
+        //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 30
         versionCode 10100
         versionName "1.1.0"

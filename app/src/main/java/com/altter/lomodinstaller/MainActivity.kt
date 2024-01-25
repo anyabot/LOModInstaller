@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        ensureUserService()
+        if (Shizuku.pingBinder()) ensureUserService()
         val tempmodFolder = prefs.getString(PREF_MOD_FOLDER, null)
         if (tempmodFolder != null) this.modFolder = tempmodFolder
         val tempmodURI = prefs.getString(PREF_MOD_URI, null)
