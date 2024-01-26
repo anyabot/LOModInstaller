@@ -557,10 +557,13 @@ fun runPatcherShizuku(
         return
     }
 
-    val realModPath = checkModPath(modPath)
+    var realModPath = checkModPath(modPath)
     if (realModPath.isEmpty()) {
         logFunction(context.getString(R.string.NO_MOD_DOC))
         return
+    }
+    if (realModPath.endsWith("/")) {
+        realModPath = realModPath.substring(0, realModPath.length - 1);
     }
     val modList = shell.getSubDirs("/storage/emulated/0/$modPath")
 
@@ -568,11 +571,11 @@ fun runPatcherShizuku(
     for ((switch, path) in switches) {
         if (!switch.isChecked) continue
         for (target in modList) {
-            if (shell.checkDirExist("$realModPath/$target/__data")) {
+            if (!shell.checkDirExist("$realModPath/$target/__data")) {
                 logFunction(String.format(context.getString(R.string.SRC_NO_DATA), target))
                 continue
             }
-            if (shell.checkDirExist("$path/files/UnityCache/Shared/${target}")) {
+            if (!shell.checkDirExist("$path/files/UnityCache/Shared/${target}")) {
                 logFunction(String.format(context.getString(R.string.NO_DEST), target))
                 continue
             }
@@ -588,11 +591,11 @@ fun runPatcherShizuku(
                     continue
                 }
                 val gibberish = listDir[0]
-                if (shell.checkDirExist("$path/files/UnityCache/Shared/${target}/$gibberish")) {
+                if (!shell.checkDirExist("$path/files/UnityCache/Shared/${target}/$gibberish")) {
                     logFunction(String.format(context.getString(R.string.NOT_DIRECTORY_2), gibberish, target))
                     continue
                 }
-                if (shell.checkDirExist("$path/files/UnityCache/Shared/${target}/$gibberish/__data")) {
+                if (!shell.checkDirExist("$path/files/UnityCache/Shared/${target}/$gibberish/__data")) {
                     logFunction(String.format(context.getString(R.string.DEST_NO_DATA), target))
                     continue
                 }

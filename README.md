@@ -1,7 +1,9 @@
 # Overview 
 A simple APK to quickly apply Mods for the game Last Origin.
 
-Require Android version 5 or above. Tested and working for Android 12 & 13.
+Require Android version 7 or above. Tested and working for Android 12 and some Android 13.
+
+With [Shizuku](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api&hl=en&gl=US) installed, the app can also use ADB to install patches for Android 11 to 14.
 
 This project is experimental, and game patching is not supported by developers. 
 
@@ -12,6 +14,10 @@ This project is experimental, and game patching is not supported by developers.
 * Give Permissions to access files and folders
   * (For Android 10 or above) Tap **GRANT PERMISSION**, then **USE THIS FOLDER** in **Android/data** to allow access to Android Storage. 
   * (For Android 13) Tap **GRANT PERMISSION** for the game version you're using, then **USE THIS FOLDER** to allow access to Android Storage. 
+    * The switches for versions of the Game should be toggleale now.
+  * (For Shizuku) See [this](https://shizuku.rikka.app/guide/setup/) for Shizuku's setup guide. 
+    * Start Shizuku (this must be done each time).
+    * Open the LO Mod Installer and tap **GRANT SHIZUKU PERMISSION** (this only needs to be done once).
     * The switches for versions of the Game should be toggleale now.
 * Tap **SELECT MOD FOLDER** and select the folder holding all the Mods to be applied. 
   * The Mod Folder location should be shown right below the button.

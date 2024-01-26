@@ -48,20 +48,21 @@ class ShizukuShell(serviceCallback: KFunction0<Unit>? = null) {
         override fun onServiceDisconnected(componentName: ComponentName) {}
     }
 
-    fun runShizukuCommand(cmd: String): String {
+    fun runShizukuCommand(cmd: String): String? {
         if (ensureUserService()) {
             val res = mUserService?.runShellCommand(cmd)
             return res.toString()
         }
-        return ""
+        return null
     }
 
     fun checkDirExist(path: String): Boolean {
         val res = runShizukuCommand("ls $path")
-        return res.isNotEmpty() && !res.contains("No such file or directory")
+        return res != null && !res.contains("No such file or directory")
     }
 
     fun getSubDirs(path: String): List<String> {
-        return runShizukuCommand("ls $path").split("\n").filter { s -> s.isNotEmpty() }
+        val res = runShizukuCommand("ls $path")
+        return res?.split("\n")?.filter { s -> s.isNotEmpty() } ?: emptyList()
     }
 }

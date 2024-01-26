@@ -453,9 +453,9 @@ class MainActivity : AppCompatActivity() {
             )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) log(this.getString(R.string.FAIL_FOLDER_13))
+            if (doc == null) logFunction(this.getString(R.string.FAIL_FOLDER_13))
             if (doc != null) {
-                doc.name?.let { log(it) }
+                doc.name?.let { logFunction(it) }
                 if (doc.name == "com.smartjoy.LastOrigin_C") {
                     this.oneStoreDoc = doc
                     prefs.edit().putString(PREF_ONESTORE_URI, doc.uri.toString()).apply()
@@ -467,7 +467,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else {
-                    log(this.getString(R.string.WRONG_FOLDER_13))
+                    logFunction(this.getString(R.string.WRONG_FOLDER_13))
                     this.oneStoreDoc = null
                 }
             }
@@ -480,9 +480,9 @@ class MainActivity : AppCompatActivity() {
             )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) log(this.getString(R.string.FAIL_FOLDER_13))
+            if (doc == null) logFunction(this.getString(R.string.FAIL_FOLDER_13))
             if (doc != null) {
-                doc.name?.let { log(it) }
+                doc.name?.let { logFunction(it) }
                 if (doc.name == "com.smartjoy.LastOrigin_G") {
                     this.playStoreDoc = doc
                     prefs.edit().putString(PREF_PLAYSTORE_URI, doc.uri.toString()).apply()
@@ -494,7 +494,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else {
-                    log(this.getString(R.string.WRONG_FOLDER_13))
+                    logFunction(this.getString(R.string.WRONG_FOLDER_13))
                     this.playStoreDoc = null
                 }
             }
@@ -507,9 +507,9 @@ class MainActivity : AppCompatActivity() {
             )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) log(this.getString(R.string.FAIL_FOLDER_13))
+            if (doc == null) logFunction(this.getString(R.string.FAIL_FOLDER_13))
             if (doc != null) {
-                doc.name?.let { log(it) }
+                doc.name?.let { logFunction(it) }
                 if (doc.name == "com.pig.laojp.aos") {
                     this.playStoreJpDoc = doc
                     prefs.edit().putString(PREF_PLAYSTORE_JP_URI, doc.uri.toString()).apply()
@@ -521,7 +521,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else {
-                    log(this.getString(R.string.WRONG_FOLDER_13))
+                    logFunction(this.getString(R.string.WRONG_FOLDER_13))
                     this.playStoreJpDoc = null
                 }
             }
@@ -534,9 +534,9 @@ class MainActivity : AppCompatActivity() {
             )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) log(this.getString(R.string.FAIL_FOLDER_13))
+            if (doc == null) logFunction(this.getString(R.string.FAIL_FOLDER_13))
             if (doc != null) {
-                doc.name?.let { log(it) }
+                doc.name?.let { logFunction(it) }
                 if (doc.name == "jp.co.fanzagames.lastorigin_r") {
                     this.fanzaDoc = doc
                     prefs.edit().putString(PREF_FANZA_URI, doc.uri.toString()).apply()
@@ -548,7 +548,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else {
-                    log(this.getString(R.string.WRONG_FOLDER_13))
+                    logFunction(this.getString(R.string.WRONG_FOLDER_13))
                     this.fanzaDoc = null
                 }
             }
@@ -583,7 +583,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetTextI18n")
-    fun log(text: String) {
+    fun logFunction(text: String) {
         CoroutineScope(Main).launch {
             val el = findViewById<TextView>(R.id.textLog)
             el.text = text + "\n" + el.text.toString()
@@ -607,14 +607,14 @@ class MainActivity : AppCompatActivity() {
         val patchBtn = findViewById<Button>(R.id.button_patch)
         CoroutineScope(Main).launch { patchBtn.isEnabled = false }
         if (mShizukuShell.isReady()) {
-            runPatcherShizuku(this, this.modFolder, this.switches, 1, { s -> this.log(s) }, mShizukuShell)
+            runPatcherShizuku(this, this.modFolder, this.switches, 1, { s -> this.logFunction(s) }, mShizukuShell)
         }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            runPatcherSAF13(this, this.modDoc, this.switches2, 1) { s -> this.log(s) }
+            runPatcherSAF13(this, this.modDoc, this.switches2, 1) { s -> this.logFunction(s) }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            runPatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 1) { s -> this.log(s) }
+            runPatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 1) { s -> this.logFunction(s) }
         else
-            runPatcher(this, this.storages, this.modFolder, this.switches, 1) { s -> this.log(s) }
+            runPatcher(this, this.storages, this.modFolder, this.switches, 1) { s -> this.logFunction(s) }
 
         CoroutineScope(Main).launch { patchBtn.isEnabled = true }
     }
@@ -623,14 +623,14 @@ class MainActivity : AppCompatActivity() {
         val clearBtn = findViewById<Button>(R.id.button_clear)
         CoroutineScope(Main).launch { clearBtn.isEnabled = false }
         if (mShizukuShell.isReady()) {
-            runPatcherShizuku(this, this.modFolder, this.switches, 2, { s -> this.log(s) }, mShizukuShell)
+            runPatcherShizuku(this, this.modFolder, this.switches, 2, { s -> this.logFunction(s) }, mShizukuShell)
         }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            runPatcherSAF13(this, this.modDoc, this.switches2, 2) { s -> this.log(s) }
+            runPatcherSAF13(this, this.modDoc, this.switches2, 2) { s -> this.logFunction(s) }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            runPatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 2) { s -> this.log(s) }
+            runPatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 2) { s -> this.logFunction(s) }
         else
-            runPatcher(this, this.storages, this.modFolder, this.switches, 2) { s -> this.log(s) }
+            runPatcher(this, this.storages, this.modFolder, this.switches, 2) { s -> this.logFunction(s) }
 
         CoroutineScope(Main).launch { clearBtn.isEnabled = true }
     }
