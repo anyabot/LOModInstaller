@@ -4,16 +4,13 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.os.storage.StorageManager
 import android.provider.DocumentsContract
 import android.view.View
@@ -21,7 +18,6 @@ import android.widget.Button
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -31,13 +27,12 @@ import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import rikka.shizuku.Shizuku
-import rikka.shizuku.Shizuku.UserServiceArgs
+import rikka.shizuku.Shizuku.OnRequestPermissionResultListener
 import rikka.shizuku.ShizukuProvider
 import java.io.File
 
 
 class MainActivity : AppCompatActivity() {
-    private var mUserService: IUserService? = null
     private val switches: HashMap<Switch, String> = HashMap()
     private val switches2: HashMap<Switch, DocumentFile?> = HashMap()
 
@@ -45,58 +40,50 @@ class MainActivity : AppCompatActivity() {
         getSharedPreferences("GRANTED_URIS", Context.MODE_PRIVATE)
     }
 
-    private val SHIZUKU_CODE = 10023
-
-    private val PREF_MOD_FOLDER = "pref_mod_folder"
-    private val PREF_MOD_URI = "pref_mod_uri"
-    private val PREF_DATA_URI = "pref_data_uri"
     private var modFolder: String = ""
     private var modDoc: DocumentFile? = null
     private var dataDoc: DocumentFile? = null
 
-    private val PREF_ONESTORE_URI = "pref_onestore_uri"
-    private val PREF_PLAYSTORE_URI = "pref_playstore_uri"
-    private val PREF_PLAYSTORE_JP_URI = "pref_playstore_jp_uri"
-    private val PREF_FANZA_URI = "pref_fanza_uri"
     private var oneStoreDoc: DocumentFile? = null
     private var playStoreDoc: DocumentFile? = null
     private var playStoreJpDoc: DocumentFile? = null
     private var fanzaDoc: DocumentFile? = null
 
-    private var shizukuPermission = false
-    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
-        override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
-            if (iBinder == null || !iBinder.pingBinder()) {
-                return
-            }
-            mUserService = IUserService.Stub.asInterface(iBinder)
-            RecheckShizuku()
-        }
-
-        override fun onServiceDisconnected(componentName: ComponentName) {}
-    }
-
     private val storages: List<String> =
         File("/storage").listFiles()?.filter { it.name != "self" }?.map { it.name } ?: listOf()
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    private val mShizukuShell: ShizukuShell = ShizukuShell(serviceCallback = this::recheckShizuku)
+    private fun onRequestPermissionsResult(requestCode: Int, grantResult: Int) {
+        val granted = grantResult == PackageManager.PERMISSION_GRANTED
+        if (granted) recheckShizuku()
+    }
+
+    private val REQUEST_PERMISSION_RESULT_LISTENER =
+        OnRequestPermissionResultListener { requestCode: Int, grantResult: Int ->
+            this.onRequestPermissionsResult(
+                requestCode,
+                grantResult
+            )
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        if (Shizuku.pingBinder()) ensureUserService()
-        val tempmodFolder = prefs.getString(PREF_MOD_FOLDER, null)
-        if (tempmodFolder != null) this.modFolder = tempmodFolder
-        val tempmodURI = prefs.getString(PREF_MOD_URI, null)
+
+        //region Load Saved File Paths
+        val tempModFolder = prefs.getString(PREF_MOD_FOLDER, null)
+        if (tempModFolder != null) this.modFolder = tempModFolder
+        val tempModURI = prefs.getString(PREF_MOD_URI, null)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) try {
-            this.modDoc = DocumentFile.fromTreeUri(this, Uri.parse(tempmodURI))
+            this.modDoc = DocumentFile.fromTreeUri(this, Uri.parse(tempModURI))
         }
         catch (e: Exception) {
             this.modDoc = null
             this.modFolder = ""
         }
-        val tempdataURI = prefs.getString(PREF_DATA_URI, null)
+        val tempDataURI = prefs.getString(PREF_DATA_URI, null)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) try {
-            this.dataDoc = DocumentFile.fromTreeUri(this, Uri.parse(tempdataURI))
+            this.dataDoc = DocumentFile.fromTreeUri(this, Uri.parse(tempDataURI))
         }
         catch (e: Exception) {
             this.dataDoc = null
@@ -129,25 +116,33 @@ class MainActivity : AppCompatActivity() {
         catch (e: Exception) {
             this.fanzaDoc = null
         }
+        //endregion
 
         this.checkPermission(true)
+        Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER)
+
+        val onestoreSwitch = findViewById<Switch>(R.id.switch_filter_onestore)
+        val playstoreSwitch = findViewById<Switch>(R.id.switch_filter_playstore)
+        val playstoreJPSwitch = findViewById<Switch>(R.id.switch_filter_playstore_jp)
+        val fanzaSwitch = findViewById<Switch>(R.id.switch_filter_fanza)
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            switches2[findViewById<Switch>(R.id.switch_filter_onestore)] = this.oneStoreDoc
-            switches2[findViewById<Switch>(R.id.switch_filter_playstore)] = this.playStoreDoc
-            switches2[findViewById<Switch>(R.id.switch_filter_playstore_jp)] = this.playStoreJpDoc
-            switches2[findViewById<Switch>(R.id.switch_filter_fanza)] = this.fanzaDoc
+            switches2[onestoreSwitch] = this.oneStoreDoc
+            switches2[playstoreSwitch] = this.playStoreDoc
+            switches2[playstoreJPSwitch] = this.playStoreJpDoc
+            switches2[fanzaSwitch] = this.fanzaDoc
         }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            switches[findViewById<Switch>(R.id.switch_filter_onestore)] = "com.smartjoy.LastOrigin_C"
-            switches[findViewById<Switch>(R.id.switch_filter_playstore)] = "com.smartjoy.LastOrigin_G"
-            switches[findViewById<Switch>(R.id.switch_filter_playstore_jp)] = "com.pig.laojp.aos"
-            switches[findViewById<Switch>(R.id.switch_filter_fanza)] = "jp.co.fanzagames.lastorigin_r"
+            switches[onestoreSwitch] = "com.smartjoy.LastOrigin_C"
+            switches[playstoreSwitch] = "com.smartjoy.LastOrigin_G"
+            switches[playstoreJPSwitch] = "com.pig.laojp.aos"
+            switches[fanzaSwitch] = "jp.co.fanzagames.lastorigin_r"
         }
         else {
-            switches[findViewById<Switch>(R.id.switch_filter_onestore)] = "Android/data/com.smartjoy.LastOrigin_C"
-            switches[findViewById<Switch>(R.id.switch_filter_playstore)] = "Android/data/com.smartjoy.LastOrigin_G"
-            switches[findViewById<Switch>(R.id.switch_filter_playstore_jp)] = "Android/data/com.pig.laojp.aos"
-            switches[findViewById<Switch>(R.id.switch_filter_fanza)] = "Android/data/jp.co.fanzagames.lastorigin_r"
+            switches[onestoreSwitch] = "Android/data/com.smartjoy.LastOrigin_C"
+            switches[playstoreSwitch] = "Android/data/com.smartjoy.LastOrigin_G"
+            switches[playstoreJPSwitch] = "Android/data/com.pig.laojp.aos"
+            switches[fanzaSwitch] = "Android/data/jp.co.fanzagames.lastorigin_r"
         }
 
         val label = findViewById<TextView>(R.id.tip_text)
@@ -169,19 +164,18 @@ class MainActivity : AppCompatActivity() {
             findViewById<Button>(R.id.button_grant).visibility = View.GONE
         }
 
-        RecheckShizuku()
-
+        recheckShizuku()
         this.updateSwitches()
-        if (this.modFolder == "") findViewById<TextView>(R.id.mod_text).text = this.getString(R.string.EMPTY_MOD_FOLDER)
+        if (this.modFolder == "") findViewById<TextView>(R.id.mod_text).text = ""
         else findViewById<TextView>(R.id.mod_text).text = String.format(this.getString(R.string.CURRENT_MOD_FOLDER), this.modFolder)
-        findViewById<Button>(R.id.button_patch).setOnClickListener { this.BeforePatch() }
-        findViewById<Button>(R.id.button_folder).setOnClickListener { this.SelectFolder() }
+        findViewById<Button>(R.id.button_patch).setOnClickListener { this.beforePatch() }
+        findViewById<Button>(R.id.button_folder).setOnClickListener { this.selectFolder() }
         findViewById<Button>(R.id.button_clear).setOnClickListener {
             AlertDialog.Builder(this).apply {
                 setTitle(R.string.CLEAR_TITLE)
                 setMessage(R.string.CLEAR_MESSAGE)
                 setPositiveButton(R.string.CLEAR_OK) { _, _ ->
-                    BeforeClear()
+                    beforeClear()
                 }
             }
                 .create()
@@ -249,6 +243,7 @@ class MainActivity : AppCompatActivity() {
                 .show()
         }
         findViewById<Button>(R.id.button_shizuku).setOnClickListener {
+//            mShizukuShell.requestPermission(this, SHIZUKU_CODE)
             if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
                 requestPermissions(arrayOf(ShizukuProvider.PERMISSION), SHIZUKU_CODE)
             } else {
@@ -313,61 +308,65 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        Shizuku.removeRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER)
+    }
     // Granted 상황에 맞춰 사용 가능 갱신
     private fun updateSwitches() {
-        if (ShizukuAvailable()) {
-            var tempSwitch = findViewById<Switch>(R.id.switch_filter_onestore)
-            if (!RunShizukuCommand("ls /storage/emulated/0/Android/data/com.smartjoy.LastOrigin_C").contains("No such file or directory")) {
-                switches[tempSwitch] = "/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_C"
-                tempSwitch.apply {
+        if (mShizukuShell.isReady()) {
+            val onestoreSwitch = findViewById<Switch>(R.id.switch_filter_onestore)
+            val playstoreSwitch = findViewById<Switch>(R.id.switch_filter_playstore)
+            val playstoreJPSwitch = findViewById<Switch>(R.id.switch_filter_playstore_jp)
+            val fanzaSwitch = findViewById<Switch>(R.id.switch_filter_fanza)
+            if (mShizukuShell.checkDirExist("/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_C")) {
+                switches[onestoreSwitch] = "/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_C"
+                onestoreSwitch.apply {
                     isChecked = true
                     isEnabled = true
                 }
             }
             else {
-                tempSwitch.apply {
+                onestoreSwitch.apply {
                     isChecked = false
                     isEnabled = false
                 }
             }
-            tempSwitch = findViewById<Switch>(R.id.switch_filter_playstore)
-            if (!RunShizukuCommand("ls /storage/emulated/0/Android/data/com.smartjoy.LastOrigin_G").contains("No such file or directory")) {
-                switches[tempSwitch] = "/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_G"
-                tempSwitch.apply {
+            if (mShizukuShell.checkDirExist("/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_G")) {
+                switches[playstoreSwitch] = "/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_G"
+                playstoreSwitch.apply {
                     isChecked = true
                     isEnabled = true
                 }
             }
             else {
-                tempSwitch.apply {
+                playstoreSwitch.apply {
                     isChecked = false
                     isEnabled = false
                 }
             }
-            tempSwitch = findViewById<Switch>(R.id.switch_filter_playstore_jp)
-            if (!RunShizukuCommand("ls /storage/emulated/0/Android/data/com.com.pig.laojp.aos").contains("No such file or directory")) {
-                switches[tempSwitch] = "/storage/emulated/0/Android/data/com.pig.laojp.aos"
-                tempSwitch.apply {
+            if (mShizukuShell.checkDirExist("/storage/emulated/0/Android/data/com.com.pig.laojp.aos")) {
+                switches[playstoreJPSwitch] = "/storage/emulated/0/Android/data/com.pig.laojp.aos"
+                playstoreJPSwitch.apply {
                     isChecked = true
                     isEnabled = true
                 }
             }
             else {
-                tempSwitch.apply {
+                playstoreJPSwitch.apply {
                     isChecked = false
                     isEnabled = false
                 }
             }
-            tempSwitch = findViewById<Switch>(R.id.switch_filter_fanza)
-            if (!RunShizukuCommand("ls /storage/emulated/0/Android/data/jp.co.fanzagames.lastorigin_r").contains("No such file or directory")) {
-                switches[tempSwitch] = "/storage/emulated/0/Android/data/jp.co.fanzagames.lastorigin_r"
-                tempSwitch.apply {
+            if (mShizukuShell.checkDirExist("/storage/emulated/0/Android/data/jp.co.fanzagames.lastorigin_r")) {
+                switches[fanzaSwitch] = "/storage/emulated/0/Android/data/jp.co.fanzagames.lastorigin_r"
+                fanzaSwitch.apply {
                     isChecked = true
                     isEnabled = true
                 }
             }
             else {
-                tempSwitch.apply {
+                fanzaSwitch.apply {
                     isChecked = false
                     isEnabled = false
                 }
@@ -431,7 +430,6 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("WrongViewCast")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
         if (requestCode == 44 && resultCode == Activity.RESULT_OK) {
             val uri = data?.data ?: return
             contentResolver.takePersistableUriPermission(
@@ -455,9 +453,9 @@ class MainActivity : AppCompatActivity() {
             )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) Log(this.getString(R.string.FAIL_FOLDER_13))
+            if (doc == null) log(this.getString(R.string.FAIL_FOLDER_13))
             if (doc != null) {
-                doc.name?.let { Log(it) }
+                doc.name?.let { log(it) }
                 if (doc.name == "com.smartjoy.LastOrigin_C") {
                     this.oneStoreDoc = doc
                     prefs.edit().putString(PREF_ONESTORE_URI, doc.uri.toString()).apply()
@@ -469,7 +467,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else {
-                    Log(this.getString(R.string.WRONG_FOLDER_13))
+                    log(this.getString(R.string.WRONG_FOLDER_13))
                     this.oneStoreDoc = null
                 }
             }
@@ -482,9 +480,9 @@ class MainActivity : AppCompatActivity() {
             )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) Log(this.getString(R.string.FAIL_FOLDER_13))
+            if (doc == null) log(this.getString(R.string.FAIL_FOLDER_13))
             if (doc != null) {
-                doc.name?.let { Log(it) }
+                doc.name?.let { log(it) }
                 if (doc.name == "com.smartjoy.LastOrigin_G") {
                     this.playStoreDoc = doc
                     prefs.edit().putString(PREF_PLAYSTORE_URI, doc.uri.toString()).apply()
@@ -496,7 +494,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else {
-                    Log(this.getString(R.string.WRONG_FOLDER_13))
+                    log(this.getString(R.string.WRONG_FOLDER_13))
                     this.playStoreDoc = null
                 }
             }
@@ -509,9 +507,9 @@ class MainActivity : AppCompatActivity() {
             )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) Log(this.getString(R.string.FAIL_FOLDER_13))
+            if (doc == null) log(this.getString(R.string.FAIL_FOLDER_13))
             if (doc != null) {
-                doc.name?.let { Log(it) }
+                doc.name?.let { log(it) }
                 if (doc.name == "com.pig.laojp.aos") {
                     this.playStoreJpDoc = doc
                     prefs.edit().putString(PREF_PLAYSTORE_JP_URI, doc.uri.toString()).apply()
@@ -523,7 +521,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else {
-                    Log(this.getString(R.string.WRONG_FOLDER_13))
+                    log(this.getString(R.string.WRONG_FOLDER_13))
                     this.playStoreJpDoc = null
                 }
             }
@@ -536,9 +534,9 @@ class MainActivity : AppCompatActivity() {
             )
 
             val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) Log(this.getString(R.string.FAIL_FOLDER_13))
+            if (doc == null) log(this.getString(R.string.FAIL_FOLDER_13))
             if (doc != null) {
-                doc.name?.let { Log(it) }
+                doc.name?.let { log(it) }
                 if (doc.name == "jp.co.fanzagames.lastorigin_r") {
                     this.fanzaDoc = doc
                     prefs.edit().putString(PREF_FANZA_URI, doc.uri.toString()).apply()
@@ -550,7 +548,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else {
-                    Log(this.getString(R.string.WRONG_FOLDER_13))
+                    log(this.getString(R.string.WRONG_FOLDER_13))
                     this.fanzaDoc = null
                 }
             }
@@ -585,56 +583,54 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetTextI18n")
-    fun Log(text: String) {
+    fun log(text: String) {
         CoroutineScope(Main).launch {
             val el = findViewById<TextView>(R.id.textLog)
             el.text = text + "\n" + el.text.toString()
         }
     }
 
-    private fun BeforePatch() {
-        // 혹시 전처리가 필요하면 여기 추가하면 됨
-        CoroutineScope(Default).launch { this@MainActivity.DoPatch() }
+    private fun beforePatch() {
+        CoroutineScope(Default).launch { this@MainActivity.doPatch() }
     }
 
-    private fun BeforeClear() {
-        // 혹시 전처리가 필요하면 여기 추가하면 됨
-        CoroutineScope(Default).launch { this@MainActivity.DoClear() }
+    private fun beforeClear() {
+        CoroutineScope(Default).launch { this@MainActivity.doClear() }
     }
 
-    private fun SelectFolder() {
+    private fun selectFolder() {
         val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         startActivityForResult(i, 9999)
     }
 
-    private fun DoPatch() {
+    private fun doPatch() {
         val patchBtn = findViewById<Button>(R.id.button_patch)
         CoroutineScope(Main).launch { patchBtn.isEnabled = false }
-        if (ShizukuAvailable()) {
-            PatcherShizuku(this, this.modFolder, this.switches, 1, { s -> this.Log(s) }, { s -> this.RunShizukuCommand(s) })
+        if (mShizukuShell.isReady()) {
+            runPatcherShizuku(this, this.modFolder, this.switches, 1, { s -> this.log(s) }, mShizukuShell)
         }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            PatcherSAF13(this, this.modDoc, this.switches2, 1) { s -> this.Log(s) }
+            runPatcherSAF13(this, this.modDoc, this.switches2, 1) { s -> this.log(s) }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            PatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 1) { s -> this.Log(s) }
+            runPatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 1) { s -> this.log(s) }
         else
-            Patcher(this, this.storages, this.modFolder, this.switches, 1) { s -> this.Log(s) }
+            runPatcher(this, this.storages, this.modFolder, this.switches, 1) { s -> this.log(s) }
 
         CoroutineScope(Main).launch { patchBtn.isEnabled = true }
     }
 
-    private fun DoClear() {
+    private fun doClear() {
         val clearBtn = findViewById<Button>(R.id.button_clear)
         CoroutineScope(Main).launch { clearBtn.isEnabled = false }
-        if (ShizukuAvailable()) {
-            PatcherShizuku(this, this.modFolder, this.switches, 2, { s -> this.Log(s) }, { s -> this.RunShizukuCommand(s) })
+        if (mShizukuShell.isReady()) {
+            runPatcherShizuku(this, this.modFolder, this.switches, 2, { s -> this.log(s) }, mShizukuShell)
         }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            PatcherSAF13(this, this.modDoc, this.switches2, 2) { s -> this.Log(s) }
+            runPatcherSAF13(this, this.modDoc, this.switches2, 2) { s -> this.log(s) }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            PatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 2) { s -> this.Log(s) }
+            runPatcherSAF(this, this.dataDoc, this.modDoc, this.switches, 2) { s -> this.log(s) }
         else
-            Patcher(this, this.storages, this.modFolder, this.switches, 2) { s -> this.Log(s) }
+            runPatcher(this, this.storages, this.modFolder, this.switches, 2) { s -> this.log(s) }
 
         CoroutineScope(Main).launch { clearBtn.isEnabled = true }
     }
@@ -649,18 +645,18 @@ class MainActivity : AppCompatActivity() {
             this.checkPermission(false)
         }
         else if (requestCode == SHIZUKU_CODE) {
-            RecheckShizuku()
+            recheckShizuku()
         }
     }
 
 
-    private fun checkPermission(need_request: Boolean) {
+    private fun checkPermission(needRequest: Boolean) {
         val patchBtn = findViewById<Button>(R.id.button_patch)
         val permissions = arrayOf(
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
             )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU &&
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU &&
             permissions.any { p ->
                 ContextCompat.checkSelfPermission(
                     this,
@@ -669,7 +665,7 @@ class MainActivity : AppCompatActivity() {
             }
         ) {
             patchBtn.isEnabled = false
-            if (need_request)
+            if (needRequest)
                 this.requestPermission(permissions)
         } else
             patchBtn.isEnabled = true
@@ -695,26 +691,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun ensureUserService(): Boolean {
-        if (mUserService != null) {
-            return true
-        }
-        val mUserServiceArgs = UserServiceArgs(
-            ComponentName(
-                BuildConfig.APPLICATION_ID,
-                UserService::class.java.name
-            )
-        )
-            .daemon(false)
-            .processNameSuffix("service")
-            .debuggable(BuildConfig.DEBUG)
-            .version(BuildConfig.VERSION_CODE)
-        Shizuku.bindUserService(mUserServiceArgs, mServiceConnection)
-        return false
-    }
-
-    private fun RecheckShizuku() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P || !Shizuku.pingBinder()) {
+    private fun recheckShizuku() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P || !mShizukuShell.isSupported()) {
             findViewById<Button>(R.id.button_shizuku).visibility = View.GONE
             findViewById<TextView>(R.id.tip_text_shizuku).visibility = View.GONE
         }
@@ -726,27 +704,21 @@ class MainActivity : AppCompatActivity() {
             findViewById<Button>(R.id.button_grant_fanza).visibility = View.GONE
             findViewById<TextView>(R.id.tip_text).visibility = View.GONE
             val shizukuLabel = findViewById<TextView>(R.id.tip_text_shizuku)
-            shizukuPermission = if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
-                checkSelfPermission(ShizukuProvider.PERMISSION) == PackageManager.PERMISSION_GRANTED
-            } else {
-                Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-            }
-            if (shizukuPermission) {
+            if (mShizukuShell.isReady()) {
                 shizukuLabel.setText(R.string.tip_saf_selected)
                 updateSwitches()
-            };
-            else shizukuLabel.visibility = View.GONE;
+            } else shizukuLabel.visibility = View.GONE
         }
     }
 
-    public fun ShizukuAvailable(): Boolean {
-        return shizukuPermission;
-    }
-
-    public fun RunShizukuCommand(cmd: String): String {
-        ensureUserService()
-        val res = mUserService?.runShellCommand(cmd)
-        return res.toString()
-
+    companion object {
+        private const val SHIZUKU_CODE = 10023
+        private const val PREF_MOD_FOLDER = "pref_mod_folder"
+        private const val PREF_MOD_URI = "pref_mod_uri"
+        private const val PREF_DATA_URI = "pref_data_uri"
+        private const val PREF_ONESTORE_URI = "pref_onestore_uri"
+        private const val PREF_PLAYSTORE_URI = "pref_playstore_uri"
+        private const val PREF_PLAYSTORE_JP_URI = "pref_playstore_jp_uri"
+        private const val PREF_FANZA_URI = "pref_fanza_uri"
     }
 }

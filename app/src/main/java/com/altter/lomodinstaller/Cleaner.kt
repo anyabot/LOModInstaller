@@ -10,7 +10,6 @@ import androidx.documentfile.provider.DocumentFile
 import org.apache.commons.io.FileUtils
 import java.io.File
 
-@RequiresApi(Build.VERSION_CODES.N)
 fun findMatchedDoc(path: String, doc: DocumentFile): DocumentFile? {
     val doc1 = doc.findFile(path) ?: return null
     val doc2 = doc1.findFile("files") ?: return null
@@ -20,31 +19,12 @@ fun findMatchedDoc(path: String, doc: DocumentFile): DocumentFile? {
     return null
 }
 
-@RequiresApi(Build.VERSION_CODES.N)
 fun findMatchedDoc13(doc: DocumentFile): DocumentFile? {
     val doc1 = doc.findFile("files") ?: return null
     val doc2 = doc1.findFile("UnityCache") ?: return null
     val doc3 = doc2.findFile("Shared")
     if (doc3 != null) return doc3
     return null
-}
-
-fun sizeReadable(size: Long): String {
-    var dSize: Float = size.toFloat()
-    var step = 0
-    while (dSize >= 1000) {
-        dSize /= 1024
-        step++
-    }
-
-    val s = dSize.toString()
-    return when {
-        step == 1 -> s + "KBs"
-        step == 2 -> s + "MBs"
-        step == 3 -> s + "GBs"
-        step == 4 -> s + "PBs"
-        else -> size.toString() + "bytes"
-    }
 }
 
 fun xcopy(context: Context, from: DocumentFile, to: DocumentFile): Boolean {
@@ -77,17 +57,13 @@ fun xread(context: Context, file: DocumentFile): ByteArray? {
     return ret
 }
 
-fun xdelete(file: DocumentFile): Boolean {
-    return file.delete()
-}
-
-fun Patcher(
+fun runPatcher(
     context: Context,
     storages: List<String>,
     mod: String,
     switches: HashMap<Switch, String>,
     mode: Int,
-    Log: (String) -> Unit
+    logFunction: (String) -> Unit
 ) {
     fun findMatchedStorageFileList(path: String): Array<File>? {
         if (path.contains("/storage/emulated/0")) {
@@ -120,138 +96,144 @@ fun Patcher(
         }
         return null
     }
-    Log("Start")
+    logFunction("Start")
     for ((switch, path) in switches) {
-        if (!switch.isChecked) continue // 스위치 체크 안된거 넘어가기
+        if (!switch.isChecked) continue
 
         val fullPath = "$path/files/UnityCache/Shared/"
         val dirs = findMatchedStorageFileList(fullPath)
         if (dirs == null) {
-            Log(context.getString(R.string.NO_DATA_DOC))
+            logFunction(context.getString(R.string.NO_DATA_DOC))
             continue
         }
 
         val modDirs = findMatchedStorageFileList(mod)
         if (modDirs == null) {
-            Log(context.getString(R.string.NO_MOD_DOC))
+            logFunction(context.getString(R.string.NO_MOD_DOC))
             continue
         }
 
-        for (target in modDirs) { // 대상 디렉터리들
+        for (target in modDirs) {
             if (!target.isDirectory) continue
 
             val newTarget = findMatchedStorageName(fullPath, target.name) ?: continue
             if (!newTarget.isDirectory) continue
             if (mode == 1) {
-                Log(String.format(context.getString(R.string.COPY_TRY), target.name))
+                logFunction(String.format(context.getString(R.string.COPY_TRY), target.name))
                 val gibberish = newTarget.listFiles()
-                if (gibberish.size != 1) {
-                    Log(String.format(context.getString(R.string.MORE_THAN_ONE), newTarget.name))
+                if (gibberish == null) {
+                    logFunction(String.format(context.getString(R.string.DEST_NO_DATA), newTarget.name))
                     continue
-                }
-
-                var check = false
-                for (data in target.listFiles()) {
-                    if (data.isDirectory) {
-                        for (data2 in data.listFiles()) {
-                            if (data2.name == "__data") {
-                                check = true
-                                if (gibberish[0].isDirectory) {
-                                    FileUtils.copyFileToDirectory(data2, gibberish[0])
-                                    Log(
-                                        String.format(
-                                            context.getString(R.string.COPY_DONE),
-                                            target.name
+                } else if (gibberish.size != 1) {
+                    logFunction(String.format(context.getString(R.string.MORE_THAN_ONE), newTarget.name))
+                    continue
+                } else {
+                    var check = false
+                    for (data in target.listFiles()!!) {
+                        if (data.isDirectory) {
+                            for (data2 in data.listFiles()!!) {
+                                if (data2.name == "__data") {
+                                    check = true
+                                    if (gibberish[0].isDirectory) {
+                                        FileUtils.copyFileToDirectory(data2, gibberish[0])
+                                        logFunction(
+                                            String.format(
+                                                context.getString(R.string.COPY_DONE),
+                                                target.name
+                                            )
                                         )
-                                    )
-                                } else {
-                                    Log(
-                                        String.format(
-                                            context.getString(R.string.NOT_DIRECTORY_2),
-                                            gibberish[0].name,
-                                            target.name
+                                    } else {
+                                        logFunction(
+                                            String.format(
+                                                context.getString(R.string.NOT_DIRECTORY_2),
+                                                gibberish[0].name,
+                                                target.name
+                                            )
                                         )
-                                    )
+                                    }
                                 }
                             }
-                        }
-                    } else if (data.name == "__data") {
-                        check = true
-                        if (gibberish[0].isDirectory) {
-                            FileUtils.copyFileToDirectory(data, gibberish[0])
-                            Log(
-                                String.format(
-                                    context.getString(R.string.COPY_DONE),
-                                    target.name
+                        } else if (data.name == "__data") {
+                            check = true
+                            if (gibberish[0].isDirectory) {
+                                FileUtils.copyFileToDirectory(data, gibberish[0])
+                                logFunction(
+                                    String.format(
+                                        context.getString(R.string.COPY_DONE),
+                                        target.name
+                                    )
                                 )
-                            )
-                        } else {
-                            Log(
-                                String.format(
-                                    context.getString(R.string.NOT_DIRECTORY_2),
-                                    gibberish[0].name,
-                                    target.name
+                            } else {
+                                logFunction(
+                                    String.format(
+                                        context.getString(R.string.NOT_DIRECTORY_2),
+                                        gibberish[0].name,
+                                        target.name
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
+                    if (!check) logFunction(
+                        String.format(
+                            context.getString(R.string.SRC_NO_DATA),
+                            target.name
+                        )
+                    )
                 }
-                if (!check) Log(String.format(context.getString(R.string.SRC_NO_DATA), target.name))
-            }
-            else if (mode == 2) {
-                Log(String.format(context.getString(R.string.DELETE_START), newTarget.name))
+            } else if (mode == 2) {
+                logFunction(String.format(context.getString(R.string.DELETE_START), newTarget.name))
                 newTarget.deleteRecursively()
             }
         }
 
     }
-    Log("Done")
+    logFunction("Done")
 }
 
-@RequiresApi(Build.VERSION_CODES.N)
-fun PatcherSAF(
+fun runPatcherSAF(
     context: Context,
     dataDoc: DocumentFile?,
     modDoc: DocumentFile?,
     switches: HashMap<Switch, String>,
     mode: Int,
-    Log: (String) -> Unit
+    logFunction: (String) -> Unit
 ) {
     if (modDoc == null) {
-        Log(context.getString(R.string.NO_MOD_DOC))
+        logFunction(context.getString(R.string.NO_MOD_DOC))
         return
     }
     if (dataDoc == null) {
-        Log(context.getString(R.string.NO_DATA_DOC))
+        logFunction(context.getString(R.string.NO_DATA_DOC))
         return
     }
-    Log("Start")
+    logFunction("Start")
     for ((switch, path) in switches) {
-        if (!switch.isChecked) continue // 스위치 체크 안된거 넘어가기
+        if (!switch.isChecked) continue
         val shared = findMatchedDoc(path, dataDoc) ?: continue
         val uri = shared.uri
-        val uripath = uri.path ?: continue
+        val uriPath = uri.path ?: continue
         for (target in modDoc.listFiles()) {
             if (target.name == null) continue
-            var temp_uri: Uri? = null
-            val temp_id = uripath.substringAfterLast("/document/") + "/" + target.name
+            var tempUri: Uri?
+            val tempId = uriPath.substringAfterLast("/document/") + "/" + target.name
 
-            temp_uri = DocumentsContract.buildDocumentUriUsingTree(
+            tempUri = DocumentsContract.buildDocumentUriUsingTree(
                 uri,
-                temp_id
+                tempId
             )
-            if (temp_uri == null) continue
-            val newtarget = DocumentFile.fromTreeUri(context, temp_uri)
-            if (newtarget == null) {
-                Log(String.format(context.getString(R.string.NO_DEST), target.name))
+            if (tempUri == null) continue
+            val newTarget = DocumentFile.fromTreeUri(context, tempUri)
+            if (newTarget == null) {
+                logFunction(String.format(context.getString(R.string.NO_DEST), target.name))
                 continue
             }
-            if (!newtarget.exists()) {
-                Log(String.format(context.getString(R.string.NO_DEST), target.name))
+            if (!newTarget.exists()) {
+                logFunction(String.format(context.getString(R.string.NO_DEST), target.name))
                 continue
             }
-            if (!newtarget.isDirectory) {
-                Log(String.format(context.getString(R.string.NOT_DIRECTORY), target.name))
+            if (!newTarget.isDirectory) {
+                logFunction(String.format(context.getString(R.string.NOT_DIRECTORY), target.name))
                 continue
             }
             if (mode == 1) {
@@ -261,15 +243,15 @@ fun PatcherSAF(
                     if (f.isDirectory) {
                         for (f2 in f.listFiles()) {
                             if (f2.name != "__data") continue
-                            Log(String.format(context.getString(R.string.COPY_TRY), target.name))
+                            logFunction(String.format(context.getString(R.string.COPY_TRY), target.name))
                             check = true
                             try {
-                                val targetList = newtarget.listFiles()
+                                val targetList = newTarget.listFiles()
                                 if (targetList.size != 1) {
-                                    Log(
+                                    logFunction(
                                         String.format(
                                             context.getString(R.string.MORE_THAN_ONE),
-                                            newtarget.name
+                                            newTarget.name
                                         )
                                     )
                                     continue
@@ -285,7 +267,7 @@ fun PatcherSAF(
                                                     f2,
                                                     dat
                                                 )
-                                            ) Log(
+                                            ) logFunction(
                                                 String.format(
                                                     context.getString(R.string.COPY_DONE),
                                                     target.name
@@ -294,7 +276,7 @@ fun PatcherSAF(
                                         }
                                     }
                                 } else {
-                                    Log(
+                                    logFunction(
                                         String.format(
                                             context.getString(R.string.NOT_DIRECTORY_2),
                                             gibberish.name,
@@ -303,27 +285,27 @@ fun PatcherSAF(
                                     )
                                     continue
                                 }
-                                if (!report) Log(
+                                if (!report) logFunction(
                                     String.format(
                                         context.getString(R.string.DEST_NO_DATA),
                                         target.name
                                     )
                                 )
                             } catch (e: Exception) {
-                                Log(e.toString())
+                                logFunction(e.toString())
                             }
                         }
                     }
                     if (f.name != "__data") continue
-                    Log(String.format(context.getString(R.string.COPY_TRY), target.name))
+                    logFunction(String.format(context.getString(R.string.COPY_TRY), target.name))
                     check = true
                     try {
-                        val targetList = newtarget.listFiles()
+                        val targetList = newTarget.listFiles()
                         if (targetList.size != 1) {
-                            Log(
+                            logFunction(
                                 String.format(
                                     context.getString(R.string.MORE_THAN_ONE),
-                                    newtarget.name
+                                    newTarget.name
                                 )
                             )
                             continue
@@ -339,7 +321,7 @@ fun PatcherSAF(
                                             f,
                                             dat
                                         )
-                                    ) Log(
+                                    ) logFunction(
                                         String.format(
                                             context.getString(R.string.COPY_DONE),
                                             target.name
@@ -348,7 +330,7 @@ fun PatcherSAF(
                                 }
                             }
                         } else {
-                            Log(
+                            logFunction(
                                 String.format(
                                     context.getString(R.string.NOT_DIRECTORY_2),
                                     gibberish.name,
@@ -357,75 +339,73 @@ fun PatcherSAF(
                             )
                             continue
                         }
-                        if (!report) Log(
+                        if (!report) logFunction(
                             String.format(
                                 context.getString(R.string.DEST_NO_DATA),
                                 target.name
                             )
                         )
                     } catch (e: Exception) {
-                        Log(e.toString())
+                        logFunction(e.toString())
                     }
                 }
-                if (!check) Log(String.format(context.getString(R.string.SRC_NO_DATA), target.name))
-            }
-            else if (mode == 2) {
+                if (!check) logFunction(String.format(context.getString(R.string.SRC_NO_DATA), target.name))
+            } else if (mode == 2) {
                 try {
-                    Log(String.format(context.getString(R.string.DELETE_START), newtarget.name))
-                    DocumentsContract.deleteDocument(context.contentResolver, newtarget.uri)
-                }
-                catch (e: Exception) {
-                    Log(e.toString())
+                    logFunction(String.format(context.getString(R.string.DELETE_START), newTarget.name))
+                    DocumentsContract.deleteDocument(context.contentResolver, newTarget.uri)
+                } catch (e: Exception) {
+                    logFunction(e.toString())
                 }
             }
         }
 
     }
-    Log("Done")
+    logFunction("Done")
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
-fun PatcherSAF13(
+fun runPatcherSAF13(
     context: Context,
     modDoc: DocumentFile?,
     switches: HashMap<Switch, DocumentFile?>,
     mode: Int,
-    Log: (String) -> Unit
+    logFunction: (String) -> Unit
 ) {
     if (modDoc == null) {
-        Log(context.getString(R.string.NO_MOD_DOC))
+        logFunction(context.getString(R.string.NO_MOD_DOC))
         return
     }
-    Log("Start")
+    logFunction("Start")
     for ((switch, doc) in switches) {
-        if (!switch.isChecked) continue // 스위치 체크 안된거 넘어가기
+        if (!switch.isChecked) continue
         if (doc == null) {
             continue
         }
         val shared = findMatchedDoc13(doc) ?: continue
         val uri = shared.uri
-        val uripath = uri.path ?: continue
+        val uriPath = uri.path ?: continue
         for (target in modDoc.listFiles()) {
             if (target.name == null) continue
-            var temp_uri: Uri? = null
-            val temp_id = uripath.substringAfterLast("/document/") + "/" + target.name
+            var tempUri: Uri?
+            val tempId = uriPath.substringAfterLast("/document/") + "/" + target.name
 
-            temp_uri = DocumentsContract.buildDocumentUriUsingTree(
+            tempUri = DocumentsContract.buildDocumentUriUsingTree(
                 uri,
-                temp_id
+                tempId
             )
-            if (temp_uri == null) continue
-            val newtarget = DocumentFile.fromTreeUri(context, temp_uri)
-            if (newtarget == null) {
-                Log(String.format(context.getString(R.string.NO_DEST), target.name))
+            if (tempUri == null) continue
+            val newTarget = DocumentFile.fromTreeUri(context, tempUri)
+            if (newTarget == null) {
+                logFunction(String.format(context.getString(R.string.NO_DEST), target.name))
                 continue
             }
-            if (!newtarget.exists()) {
-                Log(String.format(context.getString(R.string.NO_DEST), target.name))
+            if (!newTarget.exists()) {
+                logFunction(String.format(context.getString(R.string.NO_DEST), target.name))
                 continue
             }
-            if (!newtarget.isDirectory) {
-                Log(String.format(context.getString(R.string.NOT_DIRECTORY), target.name))
+            if (!newTarget.isDirectory) {
+                logFunction(String.format(context.getString(R.string.NOT_DIRECTORY), target.name))
                 continue
             }
             if (mode == 1) {
@@ -435,15 +415,15 @@ fun PatcherSAF13(
                     if (f.isDirectory) {
                         for (f2 in f.listFiles()) {
                             if (f2.name != "__data") continue
-                            Log(String.format(context.getString(R.string.COPY_TRY), target.name))
+                            logFunction(String.format(context.getString(R.string.COPY_TRY), target.name))
                             check = true
                             try {
-                                val targetList = newtarget.listFiles()
+                                val targetList = newTarget.listFiles()
                                 if (targetList.size != 1) {
-                                    Log(
+                                    logFunction(
                                         String.format(
                                             context.getString(R.string.MORE_THAN_ONE),
-                                            newtarget.name
+                                            newTarget.name
                                         )
                                     )
                                     continue
@@ -459,7 +439,7 @@ fun PatcherSAF13(
                                                     f2,
                                                     dat
                                                 )
-                                            ) Log(
+                                            ) logFunction(
                                                 String.format(
                                                     context.getString(R.string.COPY_DONE),
                                                     target.name
@@ -468,7 +448,7 @@ fun PatcherSAF13(
                                         }
                                     }
                                 } else {
-                                    Log(
+                                    logFunction(
                                         String.format(
                                             context.getString(R.string.NOT_DIRECTORY_2),
                                             gibberish.name,
@@ -477,27 +457,27 @@ fun PatcherSAF13(
                                     )
                                     continue
                                 }
-                                if (!report) Log(
+                                if (!report) logFunction(
                                     String.format(
                                         context.getString(R.string.DEST_NO_DATA),
                                         target.name
                                     )
                                 )
                             } catch (e: Exception) {
-                                Log(e.toString())
+                                logFunction(e.toString())
                             }
                         }
                     }
                     if (f.name != "__data") continue
-                    Log(String.format(context.getString(R.string.COPY_TRY), target.name))
+                    logFunction(String.format(context.getString(R.string.COPY_TRY), target.name))
                     check = true
                     try {
-                        val targetList = newtarget.listFiles()
+                        val targetList = newTarget.listFiles()
                         if (targetList.size != 1) {
-                            Log(
+                            logFunction(
                                 String.format(
                                     context.getString(R.string.MORE_THAN_ONE),
-                                    newtarget.name
+                                    newTarget.name
                                 )
                             )
                             continue
@@ -513,7 +493,7 @@ fun PatcherSAF13(
                                             f,
                                             dat
                                         )
-                                    ) Log(
+                                    ) logFunction(
                                         String.format(
                                             context.getString(R.string.COPY_DONE),
                                             target.name
@@ -522,7 +502,7 @@ fun PatcherSAF13(
                                 }
                             }
                         } else {
-                            Log(
+                            logFunction(
                                 String.format(
                                     context.getString(R.string.NOT_DIRECTORY_2),
                                     gibberish.name,
@@ -531,251 +511,99 @@ fun PatcherSAF13(
                             )
                             continue
                         }
-                        if (!report) Log(
+                        if (!report) logFunction(
                             String.format(
                                 context.getString(R.string.DEST_NO_DATA),
                                 target.name
                             )
                         )
                     } catch (e: Exception) {
-                        Log(e.toString())
+                        logFunction(e.toString())
                     }
                 }
-                if (!check) Log(String.format(context.getString(R.string.SRC_NO_DATA), target.name))
-            }
-            else if (mode == 2) {
+                if (!check) logFunction(String.format(context.getString(R.string.SRC_NO_DATA), target.name))
+            } else if (mode == 2) {
                 try {
-                    Log(String.format(context.getString(R.string.DELETE_START), newtarget.name))
-                    DocumentsContract.deleteDocument(context.contentResolver, newtarget.uri)
-                }
-                catch (e: Exception) {
-                    Log(e.toString())
+                    logFunction(String.format(context.getString(R.string.DELETE_START), newTarget.name))
+                    DocumentsContract.deleteDocument(context.contentResolver, newTarget.uri)
+                } catch (e: Exception) {
+                    logFunction(e.toString())
                 }
             }
         }
 
     }
-    Log("Done")
+    logFunction("Done")
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
-fun PatcherShizuku(
+fun runPatcherShizuku(
     context: Context,
     modPath: String?,
     switches: HashMap<Switch, String>,
     mode: Int,
-    Log: (String) -> Unit,
-    Runner: (String) -> String
+    logFunction: (String) -> Unit,
+    shell: ShizukuShell
 ) {
-    if (modPath == null) {
-        Log(context.getString(R.string.NO_MOD_DOC))
-        return
+    fun checkModPath(path: String): String {
+        return if (shell.checkDirExist(path)) path
+        else if (shell.checkDirExist("/storage/emulated/0/$modPath")) "/storage/emulated/0/$modPath"
+        else ""
     }
-    val realModPath = "/storage/emulated/0/$modPath"
-    var txt = Runner("ls $realModPath")
-    if (txt.contains("No such file or directory")) {
-        Log(context.getString(R.string.NO_MOD_DOC))
-        return
-    }
-    var modList = txt.split("\n")
-    modList = modList.filter { s -> s.isNotEmpty() }
 
-    Log("Start")
+    if (modPath == null) {
+        logFunction(context.getString(R.string.NO_MOD_DOC))
+        logFunction("Null Mod Folder")
+        return
+    }
+
+    val realModPath = checkModPath(modPath)
+    if (realModPath.isEmpty()) {
+        logFunction(context.getString(R.string.NO_MOD_DOC))
+        return
+    }
+    val modList = shell.getSubDirs("/storage/emulated/0/$modPath")
+
+    logFunction("Start")
     for ((switch, path) in switches) {
-        if (!switch.isChecked) continue // 스위치 체크 안된거 넘어가기
+        if (!switch.isChecked) continue
         for (target in modList) {
-            if (target == null) continue
-            txt = Runner("ls $realModPath/$target/__data")
-            if (txt.contains("No such file or directory")) {
-                Log(String.format(context.getString(R.string.SRC_NO_DATA), target))
+            if (shell.checkDirExist("$realModPath/$target/__data")) {
+                logFunction(String.format(context.getString(R.string.SRC_NO_DATA), target))
                 continue
             }
-            txt = Runner("ls $path/files/UnityCache/Shared/${target}")
-            if (txt.contains("No such file or directory")) {
-                Log(String.format(context.getString(R.string.NO_DEST), target))
+            if (shell.checkDirExist("$path/files/UnityCache/Shared/${target}")) {
+                logFunction(String.format(context.getString(R.string.NO_DEST), target))
                 continue
             }
             if (mode == 1) {
-                Log(String.format(context.getString(R.string.COPY_TRY), target))
-                var listDir = txt.split("\n")
-                listDir = listDir.filter { s -> s.isNotEmpty() }
+                logFunction(String.format(context.getString(R.string.COPY_TRY), target))
+                val listDir = shell.getSubDirs("$path/files/UnityCache/Shared/${target}")
+                if (listDir.isEmpty()) {
+                    logFunction(String.format(context.getString(R.string.DEST_NO_DATA), target))
+                    continue
+                }
                 if (listDir.size > 1) {
-                    Log(
-                        String.format(
-                            context.getString(R.string.MORE_THAN_ONE),
-                            target
-                        )
-                    )
+                    logFunction(String.format( context.getString(R.string.MORE_THAN_ONE), target))
                     continue
                 }
-                var gibberish = listDir[0]
-                txt = Runner("ls $path/files/UnityCache/Shared/${target}/$gibberish")
-                if (txt.contains("No such file or directory")) {
-                    Log(String.format(context.getString(R.string.NOT_DIRECTORY_2), gibberish, target))
+                val gibberish = listDir[0]
+                if (shell.checkDirExist("$path/files/UnityCache/Shared/${target}/$gibberish")) {
+                    logFunction(String.format(context.getString(R.string.NOT_DIRECTORY_2), gibberish, target))
                     continue
                 }
-                txt = Runner("ls $path/files/UnityCache/Shared/${target}/$gibberish/__data")
-                if (txt.contains("No such file or directory")) {
-                    Log(String.format(context.getString(R.string.DEST_NO_DATA), target))
+                if (shell.checkDirExist("$path/files/UnityCache/Shared/${target}/$gibberish/__data")) {
+                    logFunction(String.format(context.getString(R.string.DEST_NO_DATA), target))
                     continue
                 }
 
-                Runner("cp $realModPath/$target/__data $path/files/UnityCache/Shared/${target}/$gibberish/__data")
-                Log(String.format(context.getString(R.string.COPY_DONE), target))
+                shell.runShizukuCommand("cp $realModPath/$target/__data $path/files/UnityCache/Shared/${target}/$gibberish/__data")
+                logFunction(String.format(context.getString(R.string.COPY_DONE), target))
+            } else if (mode == 2) {
+                logFunction(String.format(context.getString(R.string.DELETE_START), target))
+                shell.runShizukuCommand("rm -r $path/files/UnityCache/Shared/${target}")
             }
-            else if (mode == 2) {
-                Log(String.format(context.getString(R.string.DELETE_START), target))
-                Runner("rm -r $path/files/UnityCache/Shared/${target}")
-            }
-
-
-//            var temp_uri: Uri? = null
-//            val temp_id = uripath.substringAfterLast("/document/") + "/" + target.name
-//
-//            temp_uri = DocumentsContract.buildDocumentUriUsingTree(
-//                uri,
-//                temp_id
-//            )
-//            if (temp_uri == null) continue
-//            val newtarget = DocumentFile.fromTreeUri(context, temp_uri)
-//            if (newtarget == null) {
-//                Log(String.format(context.getString(R.string.NO_DEST), target.name))
-//                continue
-//            }
-//            if (!newtarget.exists()) {
-//                Log(String.format(context.getString(R.string.NO_DEST), target.name))
-//                continue
-//            }
-//            if (!newtarget.isDirectory) {
-//                Log(String.format(context.getString(R.string.NOT_DIRECTORY), target.name))
-//                continue
-//            }
-//            if (mode == 1) {
-//                var check = false
-//                for (f in target.listFiles()) {
-//                    if (f == null) continue
-//                    if (f.isDirectory) {
-//                        for (f2 in f.listFiles()) {
-//                            if (f2.name != "__data") continue
-//                            Log(String.format(context.getString(R.string.COPY_TRY), target.name))
-//                            check = true
-//                            try {
-//                                val targetList = newtarget.listFiles()
-//                                if (targetList.size != 1) {
-//                                    Log(
-//                                        String.format(
-//                                            context.getString(R.string.MORE_THAN_ONE),
-//                                            newtarget.name
-//                                        )
-//                                    )
-//                                    continue
-//                                }
-//                                val gibberish = targetList[0]
-//                                var report = false
-//                                if (gibberish.isDirectory) {
-//                                    for (dat in gibberish.listFiles()) {
-//                                        if (dat.name == "__data") {
-//                                            report = true
-//                                            if (xcopy(
-//                                                    context,
-//                                                    f2,
-//                                                    dat
-//                                                )
-//                                            ) Log(
-//                                                String.format(
-//                                                    context.getString(R.string.COPY_DONE),
-//                                                    target.name
-//                                                )
-//                                            )
-//                                        }
-//                                    }
-//                                } else {
-//                                    Log(
-//                                        String.format(
-//                                            context.getString(R.string.NOT_DIRECTORY_2),
-//                                            gibberish.name,
-//                                            target.name
-//                                        )
-//                                    )
-//                                    continue
-//                                }
-//                                if (!report) Log(
-//                                    String.format(
-//                                        context.getString(R.string.DEST_NO_DATA),
-//                                        target.name
-//                                    )
-//                                )
-//                            } catch (e: Exception) {
-//                                Log(e.toString())
-//                            }
-//                        }
-//                    }
-//                    if (f.name != "__data") continue
-//                    Log(String.format(context.getString(R.string.COPY_TRY), target.name))
-//                    check = true
-//                    try {
-//                        val targetList = newtarget.listFiles()
-//                        if (targetList.size != 1) {
-//                            Log(
-//                                String.format(
-//                                    context.getString(R.string.MORE_THAN_ONE),
-//                                    newtarget.name
-//                                )
-//                            )
-//                            continue
-//                        }
-//                        val gibberish = targetList[0]
-//                        var report = false
-//                        if (gibberish.isDirectory) {
-//                            for (dat in gibberish.listFiles()) {
-//                                if (dat.name == "__data") {
-//                                    report = true
-//                                    if (xcopy(
-//                                            context,
-//                                            f,
-//                                            dat
-//                                        )
-//                                    ) Log(
-//                                        String.format(
-//                                            context.getString(R.string.COPY_DONE),
-//                                            target.name
-//                                        )
-//                                    )
-//                                }
-//                            }
-//                        } else {
-//                            Log(
-//                                String.format(
-//                                    context.getString(R.string.NOT_DIRECTORY_2),
-//                                    gibberish.name,
-//                                    target.name
-//                                )
-//                            )
-//                            continue
-//                        }
-//                        if (!report) Log(
-//                            String.format(
-//                                context.getString(R.string.DEST_NO_DATA),
-//                                target.name
-//                            )
-//                        )
-//                    } catch (e: Exception) {
-//                        Log(e.toString())
-//                    }
-//                }
-//                if (!check) Log(String.format(context.getString(R.string.SRC_NO_DATA), target.name))
-//            }
-//            else if (mode == 2) {
-//                try {
-//                    Log(String.format(context.getString(R.string.DELETE_START), newtarget.name))
-//                    DocumentsContract.deleteDocument(context.contentResolver, newtarget.uri)
-//                }
-//                catch (e: Exception) {
-//                    Log(e.toString())
-//                }
-//            }
         }
-
     }
-    Log("Done")
+    logFunction("Done")
 }

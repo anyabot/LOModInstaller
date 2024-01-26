@@ -2,6 +2,7 @@ package com.altter.lomodinstaller
 
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import kotlin.system.exitProcess
 
 
 class UserService : IUserService.Stub {
@@ -11,14 +12,14 @@ class UserService : IUserService.Stub {
 
     override fun destroy() {
         //Shizuku wants the service to be killed. Clean up and exit.
-        System.exit(0)
+        exitProcess(0)
     }
 
     override fun exit() {
-        System.exit(0)
+        exitProcess(0)
     }
 
-    override fun runShellCommand(command: String?): String? {
+    override fun runShellCommand(command: String?): String {
         var process: Process? = null
         val output = StringBuilder()
         try {
