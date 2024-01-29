@@ -571,7 +571,21 @@ fun runPatcherShizuku(
     for ((switch, path) in switches) {
         if (!switch.isChecked) continue
         for (target in modList) {
-            if (!shell.checkDirExist("$realModPath/$target/__data")) {
+            var dstDataPath = ""
+
+            if (shell.checkDirExist("$realModPath/$target/__data")) {
+                dstDataPath = "$realModPath/$target/__data"
+            }
+            else {
+                val subTargets = shell.getSubDirs("$realModPath/$target")
+                for (subTarget in subTargets) {
+                    if (shell.checkDirExist("$realModPath/$target/$subTarget/__data")) {
+                        dstDataPath = "$realModPath/$target/$subTarget/__data"
+                        break
+                    }
+                }
+            }
+            if (dstDataPath.isEmpty()) {
                 logFunction(String.format(context.getString(R.string.SRC_NO_DATA), target))
                 continue
             }
@@ -600,7 +614,7 @@ fun runPatcherShizuku(
                     continue
                 }
 
-                shell.runShizukuCommand("cp $realModPath/$target/__data $path/files/UnityCache/Shared/${target}/$gibberish/__data")
+                shell.runShizukuCommand("cp $dstDataPath $path/files/UnityCache/Shared/${target}/$gibberish/__data")
                 logFunction(String.format(context.getString(R.string.COPY_DONE), target))
             } else if (mode == 2) {
                 logFunction(String.format(context.getString(R.string.DELETE_START), target))

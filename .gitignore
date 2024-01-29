@@ -15,4 +15,5 @@
 local.properties
 /guide/
 /app/release
-.vs/*
+.vs
+.idea
