@@ -48,21 +48,30 @@ class ShizukuShell(serviceCallback: KFunction0<Unit>? = null) {
         override fun onServiceDisconnected(componentName: ComponentName) {}
     }
 
-    fun runShizukuCommand(cmd: String): String? {
+    fun runShizukuCommand(cmd: Array<String>): String? {
         if (ensureUserService()) {
-            val res = mUserService?.runShellCommand(cmd)
+            val res = mUserService?.runShellCommands(cmd)
             return res.toString()
         }
         return null
     }
 
     fun checkDirExist(path: String): Boolean {
-        val res = runShizukuCommand("ls $path")
+        val res = runShizukuCommand(arrayOf("ls", path))
         return res != null && !res.contains("No such file or directory")
     }
 
     fun getSubDirs(path: String): List<String> {
-        val res = runShizukuCommand("ls $path")
+        val res = runShizukuCommand(arrayOf("ls", path))
         return res?.split("\n")?.filter { s -> s.isNotEmpty() } ?: emptyList()
+    }
+
+    fun copyFile(fromPath: String, toPath: String) {
+        runShizukuCommand(arrayOf("cp", fromPath, toPath))
+    }
+
+    fun removeFolder(path: String) {
+        val path2 = path.replace(" ", Regex.escapeReplacement("\\ "))
+        runShizukuCommand(arrayOf("rm", "-r", path))
     }
 }

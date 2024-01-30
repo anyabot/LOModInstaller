@@ -9,6 +9,7 @@ import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import org.apache.commons.io.FileUtils
 import java.io.File
+import kotlin.math.log
 
 fun findMatchedDoc(path: String, doc: DocumentFile): DocumentFile? {
     val doc1 = doc.findFile(path) ?: return null
@@ -547,7 +548,7 @@ fun runPatcherShizuku(
 ) {
     fun checkModPath(path: String): String {
         return if (shell.checkDirExist(path)) path
-        else if (shell.checkDirExist("/storage/emulated/0/$modPath")) "/storage/emulated/0/$modPath"
+        else if (shell.checkDirExist("/storage/emulated/0/$path")) "/storage/emulated/0/$path"
         else ""
     }
 
@@ -556,12 +557,12 @@ fun runPatcherShizuku(
         logFunction("Null Mod Folder")
         return
     }
-
     var realModPath = checkModPath(modPath)
     if (realModPath.isEmpty()) {
         logFunction(context.getString(R.string.NO_MOD_DOC))
         return
     }
+
     if (realModPath.endsWith("/")) {
         realModPath = realModPath.substring(0, realModPath.length - 1);
     }
@@ -614,11 +615,11 @@ fun runPatcherShizuku(
                     continue
                 }
 
-                shell.runShizukuCommand("cp $dstDataPath $path/files/UnityCache/Shared/${target}/$gibberish/__data")
+                shell.copyFile(dstDataPath, "$path/files/UnityCache/Shared/${target}/$gibberish/__data")
                 logFunction(String.format(context.getString(R.string.COPY_DONE), target))
             } else if (mode == 2) {
                 logFunction(String.format(context.getString(R.string.DELETE_START), target))
-                shell.runShizukuCommand("rm -r $path/files/UnityCache/Shared/${target}")
+                shell.removeFolder("$path/files/UnityCache/Shared/${target}")
             }
         }
     }

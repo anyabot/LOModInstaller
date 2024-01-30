@@ -8,5 +8,5 @@ interface IUserService {
 
     void exit() = 1;
 
-    String runShellCommand(String command) = 0;
+    String runShellCommands(in String[] commands) = 0;
 }
