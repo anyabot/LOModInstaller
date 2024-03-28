@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
+import android.util.Log
 import rikka.shizuku.Shizuku
 import kotlin.reflect.KFunction0
 
@@ -70,8 +71,8 @@ class ShizukuShell(serviceCallback: KFunction0<Unit>? = null) {
         runShizukuCommand(arrayOf("cp", fromPath, toPath))
     }
 
-    fun removeFolder(path: String) {
+    fun removeFolder(path: String): String? {
         val path2 = path.replace(" ", Regex.escapeReplacement("\\ "))
-        runShizukuCommand(arrayOf("rm", "-r", path))
+        return runShizukuCommand(arrayOf("rm", "-rv", path))
     }
 }

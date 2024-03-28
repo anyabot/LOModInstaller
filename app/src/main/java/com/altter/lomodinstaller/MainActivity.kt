@@ -345,7 +345,7 @@ class MainActivity : AppCompatActivity() {
                     isEnabled = false
                 }
             }
-            if (mShizukuShell.checkDirExist("/storage/emulated/0/Android/data/com.com.pig.laojp.aos")) {
+            if (mShizukuShell.checkDirExist("/storage/emulated/0/Android/data/com.pig.laojp.aos")) {
                 switches[playstoreJPSwitch] = "/storage/emulated/0/Android/data/com.pig.laojp.aos"
                 playstoreJPSwitch.apply {
                     isChecked = true

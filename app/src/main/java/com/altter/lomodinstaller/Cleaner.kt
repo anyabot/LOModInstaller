@@ -620,6 +620,7 @@ fun runPatcherShizuku(
             } else if (mode == 2) {
                 logFunction(String.format(context.getString(R.string.DELETE_START), target))
                 shell.removeFolder("$path/files/UnityCache/Shared/${target}")
+                    ?.let { logFunction(it) }
             }
         }
     }
