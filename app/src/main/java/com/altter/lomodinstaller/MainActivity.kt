@@ -53,14 +53,14 @@ class MainActivity : AppCompatActivity() {
         const val PREF_PLAYSTORE_URI = "pref_playstore_uri"
         const val PREF_PLAYSTORE_JP_URI = "pref_playstore_jp_uri"
         const val PREF_FANZA_URI = "pref_fanza_uri"
+        const val PREF_TW_URI = "pref_tw_uri"
+        const val PREF_TW_R_URI = "pref_tw_r_uri"
+        const val PREF_WAYI_URI = "pref_wayi_uri"
+        const val PREF_WAYI_R_URI = "pref_wayi_r_uri"
     }
     private var modFolder: String = ""
     private var modDoc: DocumentFile? = null
     private var dataDoc: DocumentFile? = null
-    private var oneStoreDoc: DocumentFile? = null
-    private var playStoreDoc: DocumentFile? = null
-    private var playStoreJpDoc: DocumentFile? = null
-    private var fanzaDoc: DocumentFile? = null
 
     private val storages: List<String> =
         File("/storage").listFiles()?.filter { it.name != "self" }?.map { it.name } ?: listOf()
@@ -127,28 +127,28 @@ class MainActivity : AppCompatActivity() {
             PlatformConfig(
                 buttonId = R.id.button_grant_tw,
                 switchId = R.id.switch_filter_tw,
-                prefUriKey = PREF_FANZA_URI,
+                prefUriKey = PREF_TW_URI,
                 packageName = "com.valofe.laotw",
                 requestCode = 995
             ),
             PlatformConfig(
                 buttonId = R.id.button_grant_tw_r,
                 switchId = R.id.switch_filter_tw_r,
-                prefUriKey = PREF_FANZA_URI,
+                prefUriKey = PREF_TW_R_URI,
                 packageName = "com.valofe.laotw.ero",
                 requestCode = 996
             ),
             PlatformConfig(
                 buttonId = R.id.button_grant_wayi,
                 switchId = R.id.switch_filter_wayi,
-                prefUriKey = PREF_FANZA_URI,
+                prefUriKey = PREF_WAYI_URI,
                 packageName = "com.valofe.laotw.wayi_n",
                 requestCode = 997
             ),
             PlatformConfig(
                 buttonId = R.id.button_grant_wayi_r,
                 switchId = R.id.switch_filter_wayi_r,
-                prefUriKey = PREF_FANZA_URI,
+                prefUriKey = PREF_WAYI_R_URI,
                 packageName = "com.valofe.laotw.wayi",
                 requestCode = 998
             )
@@ -347,89 +347,53 @@ class MainActivity : AppCompatActivity() {
 
     // Granted 상황에 맞춰 사용 가능 갱신
     private fun updateSwitches() {
-        if (mShizukuShell.isReady()) {
-            val onestoreSwitch = findViewById<Switch>(R.id.switch_filter_onestore)
-            val playstoreSwitch = findViewById<Switch>(R.id.switch_filter_playstore)
-            val playstoreJPSwitch = findViewById<Switch>(R.id.switch_filter_playstore_jp)
-            val fanzaSwitch = findViewById<Switch>(R.id.switch_filter_fanza)
-            if (mShizukuShell.checkDirExist("/storage/emulated/0/A\u200Bndroid/data/com.smartjoy.LastOrigin_C")) {
-                switches[onestoreSwitch] = "/storage/emulated/0/A\u200Bndroid/data/com.smartjoy.LastOrigin_C"
-                onestoreSwitch.apply {
-                    isChecked = true
-                    isEnabled = true
-                }
-            }
-            else {
-                onestoreSwitch.apply {
-                    isChecked = false
-                    isEnabled = false
-                }
-            }
-            if (mShizukuShell.checkDirExist("/storage/emulated/0/A\u200Bndroid/data/com.smartjoy.LastOrigin_G")) {
-                switches[playstoreSwitch] = "/storage/emulated/0/A\u200Bndroid/data/com.smartjoy.LastOrigin_G"
-                playstoreSwitch.apply {
-                    isChecked = true
-                    isEnabled = true
-                }
-            }
-            else {
-                playstoreSwitch.apply {
-                    isChecked = false
-                    isEnabled = false
-                }
-            }
-            if (mShizukuShell.checkDirExist("/storage/emulated/0/A\u200Bndroid/data/com.pig.laojp.aos")) {
-                switches[playstoreJPSwitch] = "/storage/emulated/0/A\u200Bndroid/data/com.pig.laojp.aos"
-                playstoreJPSwitch.apply {
-                    isChecked = true
-                    isEnabled = true
-                }
-            }
-            else {
-                playstoreJPSwitch.apply {
-                    isChecked = false
-                    isEnabled = false
-                }
-            }
-            if (mShizukuShell.checkDirExist("/storage/emulated/0/A\u200Bndroid/data/jp.co.fanzagames.lastorigin_r")) {
-                switches[fanzaSwitch] = "/storage/emulated/0/A\u200Bndroid/data/jp.co.fanzagames.lastorigin_r"
-                fanzaSwitch.apply {
-                    isChecked = true
-                    isEnabled = true
-                }
-            }
-            else {
-                fanzaSwitch.apply {
-                    isChecked = false
-                    isEnabled = false
-                }
-            }
-        }
-        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            for ((switch, doc) in switches2) {
-                val usable = doc != null
+        val platforms = platformRepository.getPlatformsForVersion(Build.VERSION.SDK_INT)
 
-                switch.apply {
-                    isChecked = usable
-                    isEnabled = usable
+        when {
+            mShizukuShell.isReady() -> {
+                platforms.forEach { platform ->
+                    val switch = findViewById<Switch>(platform.switchId)
+                    val fullPath = "/storage/emulated/0/${platform.androidDataPath}"
+
+                    if (mShizukuShell.checkDirExist(fullPath)) {
+                        switches[switch] = fullPath
+                        switch.apply {
+                            isChecked = true
+                            isEnabled = true
+                        }
+                    } else {
+                        switch.apply {
+                            isChecked = false
+                            isEnabled = false
+                        }
+                    }
                 }
             }
-        }
-        else {
-            for ((switch, path) in switches) {
-                val usable = when {
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> this.dataDoc?.let {
-                        findMatchedDoc(
-                            path,
-                            it
-                        )
-                    } != null
-                    else -> File("/storage/emulated/0/$path/files/UnityCache/Shared/").exists()
-                }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                platforms.forEach { platform ->
+                    val switch = findViewById<Switch>(platform.switchId)
+                    val usable = platform.document != null
 
-                switch.apply {
-                    isChecked = usable
-                    isEnabled = usable
+                    switch.apply {
+                        isChecked = usable
+                        isEnabled = usable
+                    }
+                }
+            }
+            else -> {
+                platforms.forEach { platform ->
+                    val switch = findViewById<Switch>(platform.switchId)
+                    val usable = when {
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
+                            this.dataDoc?.let { findMatchedDoc(platform.getStoragePath(Build.VERSION.SDK_INT), it) } != null
+                        else ->
+                            File("/storage/emulated/0/${platform.androidDataPath}/files/UnityCache/Shared/").exists()
+                    }
+
+                    switch.apply {
+                        isChecked = usable
+                        isEnabled = usable
+                    }
                 }
             }
         }
@@ -474,15 +438,17 @@ class MainActivity : AppCompatActivity() {
 
         when (requestCode) {
             44 -> handleDataUri(uri)
-            991 -> handlePlatformUri(uri, "com.smartjoy.LastOrigin_C",
-                PREF_ONESTORE_URI, R.id.switch_filter_onestore, ::oneStoreDoc)
-            992 -> handlePlatformUri(uri, "com.smartjoy.LastOrigin_G",
-                PREF_PLAYSTORE_URI, R.id.switch_filter_playstore, ::playStoreDoc)
-            993 -> handlePlatformUri(uri, "com.pig.laojp.aos",
-                PREF_PLAYSTORE_JP_URI, R.id.switch_filter_playstore_jp, ::playStoreJpDoc)
-            994 -> handlePlatformUri(uri, "jp.co.fanzagames.lastorigin_r",
-                PREF_FANZA_URI, R.id.switch_filter_fanza, ::fanzaDoc)
             9999 -> handleModUri(uri)
+            else -> {
+                platformRepository.getPlatformsForVersion(Build.VERSION.SDK_INT)
+                    .find { it.requestCode == requestCode }
+                    ?.let { platform ->
+                        handlePlatformUri(
+                            uri,
+                            platform,
+                        )
+                    }
+            }
         }
     }
 
@@ -496,10 +462,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun handlePlatformUri(
         uri: Uri,
-        expectedName: String,
-        prefKey: String,
-        switchId: Int,
-        docProperty: KMutableProperty0<DocumentFile?>
+        platform: PlatformConfig
     ) {
         val doc = DocumentFile.fromTreeUri(this, uri)
 
@@ -510,10 +473,10 @@ class MainActivity : AppCompatActivity() {
 
         doc.name?.let { logFunction(it) }
 
-        if (doc.name == expectedName) {
-            docProperty.set(doc)
-            prefs.edit().putString(prefKey, doc.uri.toString()).apply()
-            val switch = findViewById<Switch>(switchId)
+        if (doc.name == platform.packageName) {
+            platform.document = doc
+            prefs.edit().putString(platform.prefUriKey, doc.uri.toString()).apply()
+            val switch = findViewById<Switch>(platform.switchId)
             switches2[switch] = doc
             switch.apply {
                 isChecked = true
@@ -521,7 +484,7 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             logFunction(getString(R.string.WRONG_FOLDER_13))
-            docProperty.set(null)
+            platform.document = null
         }
     }
 
