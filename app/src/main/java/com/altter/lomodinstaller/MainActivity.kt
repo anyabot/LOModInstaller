@@ -18,6 +18,7 @@ import android.widget.Button
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -30,33 +31,39 @@ import rikka.shizuku.Shizuku
 import rikka.shizuku.Shizuku.OnRequestPermissionResultListener
 import rikka.shizuku.ShizukuProvider
 import java.io.File
+import kotlin.reflect.KMutableProperty0
 
 
 class MainActivity : AppCompatActivity() {
     private val switches: HashMap<Switch, String> = HashMap()
     private val switches2: HashMap<Switch, DocumentFile?> = HashMap()
+    private lateinit var platformRepository: PlatformRepository
+    private val mShizukuShell: ShizukuShell = ShizukuShell(serviceCallback = this::recheckShizuku)
 
     private val prefs: SharedPreferences by lazy {
         getSharedPreferences("GRANTED_URIS", Context.MODE_PRIVATE)
     }
 
+    companion object {
+        const val SHIZUKU_CODE = 10023
+        const val PREF_MOD_FOLDER = "pref_mod_folder"
+        const val PREF_MOD_URI = "pref_mod_uri"
+        const val PREF_DATA_URI = "pref_data_uri"
+        const val PREF_ONESTORE_URI = "pref_onestore_uri"
+        const val PREF_PLAYSTORE_URI = "pref_playstore_uri"
+        const val PREF_PLAYSTORE_JP_URI = "pref_playstore_jp_uri"
+        const val PREF_FANZA_URI = "pref_fanza_uri"
+        const val PREF_TW_URI = "pref_tw_uri"
+        const val PREF_TW_R_URI = "pref_tw_r_uri"
+        const val PREF_WAYI_URI = "pref_wayi_uri"
+        const val PREF_WAYI_R_URI = "pref_wayi_r_uri"
+    }
     private var modFolder: String = ""
     private var modDoc: DocumentFile? = null
     private var dataDoc: DocumentFile? = null
 
-    private var oneStoreDoc: DocumentFile? = null
-    private var playStoreDoc: DocumentFile? = null
-    private var playStoreJpDoc: DocumentFile? = null
-    private var fanzaDoc: DocumentFile? = null
-
     private val storages: List<String> =
         File("/storage").listFiles()?.filter { it.name != "self" }?.map { it.name } ?: listOf()
-
-    private val mShizukuShell: ShizukuShell = ShizukuShell(serviceCallback = this::recheckShizuku)
-    private fun onRequestPermissionsResult(requestCode: Int, grantResult: Int) {
-        val granted = grantResult == PackageManager.PERMISSION_GRANTED
-        if (granted) recheckShizuku()
-    }
 
     private val REQUEST_PERMISSION_RESULT_LISTENER =
         OnRequestPermissionResultListener { requestCode: Int, grantResult: Int ->
@@ -66,337 +73,327 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
+    data class PlatformConfig(
+        @IdRes val buttonId: Int,
+        @IdRes val switchId: Int,
+        val prefUriKey: String,
+        val packageName: String,
+        val requestCode: Int,
+        var document: DocumentFile? = null
+    ) {
+        // Automatically generate androidDataPath with invisible character
+        val androidDataPath: String get() = "A\u200Bndroid/data/$packageName"
+
+        // Helper properties
+        val normalizedPackageName: String get() = packageName.replace(".", "\\.")
+        val uriEncodedPath: String get() = androidDataPath.replace("/", "%2F").replace(".", "%2E")
+
+        fun getStoragePath(version: Int): String = when {
+            version >= Build.VERSION_CODES.TIRAMISU -> uriEncodedPath
+            version >= Build.VERSION_CODES.Q -> packageName
+            else -> androidDataPath
+        }
+    }
+    class PlatformRepository(private val context: Context, private val prefs: SharedPreferences) {
+        private val allPlatforms = listOf(
+            PlatformConfig(
+                buttonId = R.id.button_grant_onestore,
+                switchId = R.id.switch_filter_onestore,
+                prefUriKey = PREF_ONESTORE_URI,
+                packageName = "com.smartjoy.LastOrigin_C",
+                requestCode = 991
+            ),
+            PlatformConfig(
+                buttonId = R.id.button_grant_playstore,
+                switchId = R.id.switch_filter_playstore,
+                prefUriKey = PREF_PLAYSTORE_URI,
+                packageName = "com.smartjoy.LastOrigin_G",
+                requestCode = 992
+            ),
+            PlatformConfig(
+                buttonId = R.id.button_grant_playstore_jp,
+                switchId = R.id.switch_filter_playstore_jp,
+                prefUriKey = PREF_PLAYSTORE_JP_URI,
+                packageName = "com.pig.laojp.aos",
+                requestCode = 993
+            ),
+            PlatformConfig(
+                buttonId = R.id.button_grant_fanza,
+                switchId = R.id.switch_filter_fanza,
+                prefUriKey = PREF_FANZA_URI,
+                packageName = "jp.co.fanzagames.lastorigin_r",
+                requestCode = 994
+            ),
+            PlatformConfig(
+                buttonId = R.id.button_grant_tw,
+                switchId = R.id.switch_filter_tw,
+                prefUriKey = PREF_TW_URI,
+                packageName = "com.valofe.laotw",
+                requestCode = 995
+            ),
+            PlatformConfig(
+                buttonId = R.id.button_grant_tw_r,
+                switchId = R.id.switch_filter_tw_r,
+                prefUriKey = PREF_TW_R_URI,
+                packageName = "com.valofe.laotw.ero",
+                requestCode = 996
+            ),
+            PlatformConfig(
+                buttonId = R.id.button_grant_wayi,
+                switchId = R.id.switch_filter_wayi,
+                prefUriKey = PREF_WAYI_URI,
+                packageName = "com.valofe.laotw.wayi_n",
+                requestCode = 997
+            ),
+            PlatformConfig(
+                buttonId = R.id.button_grant_wayi_r,
+                switchId = R.id.switch_filter_wayi_r,
+                prefUriKey = PREF_WAYI_R_URI,
+                packageName = "com.valofe.laotw.wayi",
+                requestCode = 998
+            )
+        )
+        fun getPlatformsForVersion(version: Int): List<PlatformConfig> {
+            return allPlatforms.onEach { platform ->
+                platform.document = if (version >= Build.VERSION_CODES.TIRAMISU) {
+                    safeParseDocumentUri(prefs.getString(platform.prefUriKey, null))
+                } else {
+                    null
+                }
+            }
+        }
+
+        fun safeParseDocumentUri(uriString: String?): DocumentFile? {
+            return try {
+                uriString?.let { DocumentFile.fromTreeUri(context, Uri.parse(it)) }
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //region Load Saved File Paths
-        val tempModFolder = prefs.getString(PREF_MOD_FOLDER, null)
-        if (tempModFolder != null) this.modFolder = tempModFolder
-        val tempModURI = prefs.getString(PREF_MOD_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) try {
-            this.modDoc = DocumentFile.fromTreeUri(this, Uri.parse(tempModURI))
-        }
-        catch (e: Exception) {
-            this.modDoc = null
-            this.modFolder = ""
-        }
-        val tempDataURI = prefs.getString(PREF_DATA_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) try {
-            this.dataDoc = DocumentFile.fromTreeUri(this, Uri.parse(tempDataURI))
-        }
-        catch (e: Exception) {
-            this.dataDoc = null
-        }
-        val oneStoreURI = prefs.getString(PREF_ONESTORE_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) try {
-            this.oneStoreDoc = DocumentFile.fromTreeUri(this, Uri.parse(oneStoreURI))
-        }
-        catch (e: Exception) {
-            this.oneStoreDoc = null
-        }
-        val playStoreURI = prefs.getString(PREF_PLAYSTORE_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) try {
-            this.playStoreDoc = DocumentFile.fromTreeUri(this, Uri.parse(playStoreURI))
-        }
-        catch (e: Exception) {
-            this.playStoreDoc = null
-        }
-        val playStoreJpURI = prefs.getString(PREF_PLAYSTORE_JP_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) try {
-            this.playStoreJpDoc = DocumentFile.fromTreeUri(this, Uri.parse(playStoreJpURI))
-        }
-        catch (e: Exception) {
-            this.playStoreJpDoc = null
-        }
-        val fanzaURI = prefs.getString(PREF_FANZA_URI, null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) try {
-            this.fanzaDoc = DocumentFile.fromTreeUri(this, Uri.parse(fanzaURI))
-        }
-        catch (e: Exception) {
-            this.fanzaDoc = null
-        }
-        //endregion
-
-        this.checkPermission(true)
+        platformRepository = PlatformRepository(this, prefs)
         Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER)
 
-        val onestoreSwitch = findViewById<Switch>(R.id.switch_filter_onestore)
-        val playstoreSwitch = findViewById<Switch>(R.id.switch_filter_playstore)
-        val playstoreJPSwitch = findViewById<Switch>(R.id.switch_filter_playstore_jp)
-        val fanzaSwitch = findViewById<Switch>(R.id.switch_filter_fanza)
+        // Load persisted data
+        initializePersistedData()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            switches2[onestoreSwitch] = this.oneStoreDoc
-            switches2[playstoreSwitch] = this.playStoreDoc
-            switches2[playstoreJPSwitch] = this.playStoreJpDoc
-            switches2[fanzaSwitch] = this.fanzaDoc
-        }
-        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            switches[onestoreSwitch] = "com.smartjoy.LastOrigin_C"
-            switches[playstoreSwitch] = "com.smartjoy.LastOrigin_G"
-            switches[playstoreJPSwitch] = "com.pig.laojp.aos"
-            switches[fanzaSwitch] = "jp.co.fanzagames.lastorigin_r"
-        }
-        else {
-            switches[onestoreSwitch] = "Android/data/com.smartjoy.LastOrigin_C"
-            switches[playstoreSwitch] = "Android/data/com.smartjoy.LastOrigin_G"
-            switches[playstoreJPSwitch] = "Android/data/com.pig.laojp.aos"
-            switches[fanzaSwitch] = "Android/data/jp.co.fanzagames.lastorigin_r"
-        }
+        // Setup UI based on A\u200Bndroid version
+        setupVersionSpecificUI()
 
-        val label = findViewById<TextView>(R.id.tip_text)
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            findViewById<Button>(R.id.button_grant).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_onestore).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_playstore).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_playstore_jp).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_fanza).visibility = View.GONE
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            label.setText(R.string.tip_saf_selected)
+        // Set up remaining UI components
+        setupUIComponents()
 
-            findViewById<Button>(R.id.button_grant_onestore).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_playstore).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_playstore_jp).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_fanza).visibility = View.GONE
-        } else {
-            label.setText(R.string.tip_saf_selected)
-            findViewById<Button>(R.id.button_grant).visibility = View.GONE
-        }
-
+        // Check Shizuku status
         recheckShizuku()
-        this.updateSwitches()
-        if (this.modFolder == "") findViewById<TextView>(R.id.mod_text).text = ""
-        else findViewById<TextView>(R.id.mod_text).text = String.format(this.getString(R.string.CURRENT_MOD_FOLDER), this.modFolder)
-        findViewById<Button>(R.id.button_patch).setOnClickListener { this.beforePatch() }
-        findViewById<Button>(R.id.button_folder).setOnClickListener { this.selectFolder() }
-        findViewById<Button>(R.id.button_clear).setOnClickListener {
-            AlertDialog.Builder(this).apply {
-                setTitle(R.string.CLEAR_TITLE)
-                setMessage(R.string.CLEAR_MESSAGE)
-                setPositiveButton(R.string.CLEAR_OK) { _, _ ->
-                    beforeClear()
-                }
-            }
-                .create()
-                .show()
-        }
-        findViewById<Button>(R.id.button_grant).setOnClickListener {
-            AlertDialog.Builder(this).apply {
-                setTitle(R.string.GRANT_PERMISSION_TITLE)
-                setMessage(R.string.GRANT_PERMISSION_MESSAGE)
-                setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 
-                        val sm = context.getSystemService(STORAGE_SERVICE) as StorageManager
-
-                        val intent = sm.primaryStorageVolume.createOpenDocumentTreeIntent()
-
-                        val startSubDir = "Android%2Fdata"
-
-                        var uri =
-                            intent.getParcelableExtra<Uri>("android.provider.extra.INITIAL_URI")
-
-                        var scheme = uri.toString()
-
-
-                        scheme = scheme.replace("/root/", "/document/")
-
-                        scheme += "%3A$startSubDir"
-
-                        uri = Uri.parse(scheme)
-
-                        intent.putExtra("android.provider.extra.INITIAL_URI", uri)
-
-                        startActivityForResult(
-                            intent,
-                            44
-                        )
-                    }
-                    else {
-                        val intent = Intent("android.intent.action.OPEN_DOCUMENT_TREE").apply {
-                            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            flags = flags or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-
-                            putExtra("android.content.extra.SHOW_ADVANCED", true)
-
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
-                                val uri = getSAFTreeUri()
-                                putExtra(
-                                    "android.provider.extra.INITIAL_URI",
-                                    DocumentsContract.buildDocumentUriUsingTree(
-                                        uri,
-                                        DocumentsContract.getTreeDocumentId(uri)
-                                    )
-                                )
-
-                            }
-                        }
-                        startActivityForResult(intent, 44)
-                    }
-
-                }
-            }
-                .create()
-                .show()
-        }
-        findViewById<Button>(R.id.button_shizuku).setOnClickListener {
-//            mShizukuShell.requestPermission(this, SHIZUKU_CODE)
-            if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
-                requestPermissions(arrayOf(ShizukuProvider.PERMISSION), SHIZUKU_CODE)
-            } else {
-                Shizuku.requestPermission(SHIZUKU_CODE)
-            }
-        }
-        findViewById<Button>(R.id.button_grant_onestore).setOnClickListener {
-            AlertDialog.Builder(this).apply {
-                setTitle(R.string.GRANT_PERMISSION_TITLE)
-                setMessage(R.string.GRANT_PERMISSION_MESSAGE)
-                setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        val sm = context.getSystemService(STORAGE_SERVICE) as StorageManager
-                        newPermission("Android%2Fdata%2Fcom%2Esmartjoy%2ELastOrigin%5FC", 991, sm)
-                    }
-                }
-            }
-                .create()
-                .show()
-        }
-        findViewById<Button>(R.id.button_grant_playstore).setOnClickListener {
-            AlertDialog.Builder(this).apply {
-                setTitle(R.string.GRANT_PERMISSION_TITLE)
-                setMessage(R.string.GRANT_PERMISSION_MESSAGE)
-                setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        val sm = context.getSystemService(STORAGE_SERVICE) as StorageManager
-                        newPermission("Android%2Fdata%2Fcom%2Esmartjoy%2ELastOrigin%5FG", 992, sm)
-                    }
-                }
-            }
-                .create()
-                .show()
-        }
-        findViewById<Button>(R.id.button_grant_playstore_jp).setOnClickListener {
-            AlertDialog.Builder(this).apply {
-                setTitle(R.string.GRANT_PERMISSION_TITLE)
-                setMessage(R.string.GRANT_PERMISSION_MESSAGE)
-                setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        val sm = context.getSystemService(STORAGE_SERVICE) as StorageManager
-                        newPermission("Android%2Fdata%2Fcom%2Epig%2Elaojp%2Eaos", 993, sm)
-                    }
-                }
-            }
-                .create()
-                .show()
-        }
-        findViewById<Button>(R.id.button_grant_fanza).setOnClickListener {
-            AlertDialog.Builder(this).apply {
-                setTitle(R.string.GRANT_PERMISSION_TITLE)
-                setMessage(R.string.GRANT_PERMISSION_MESSAGE)
-                setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        val sm = context.getSystemService(STORAGE_SERVICE) as StorageManager
-                        newPermission("Android%2Fdata%2Fjp%2Eco%2Efanzagames%2Elastorigin%5Fr", 994, sm)
-                    }
-                }
-            }
-                .create()
-                .show()
-        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Shizuku.removeRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER)
     }
+
+    private fun initializePersistedData() {
+        // Load mod folder and URI
+        modFolder = prefs.getString(PREF_MOD_FOLDER, null) ?: ""
+        modDoc = platformRepository.safeParseDocumentUri(prefs.getString(PREF_MOD_URI, null))
+
+        // Load data document (only for Q-Tiramisu)
+        if (Build.VERSION.SDK_INT in Build.VERSION_CODES.Q until Build.VERSION_CODES.TIRAMISU) {
+            dataDoc = platformRepository.safeParseDocumentUri(prefs.getString(PREF_DATA_URI, null))
+        }
+    }
+
+    private fun setupVersionSpecificUI() {
+        val label = findViewById<TextView>(R.id.tip_text)
+        val grantButton = findViewById<Button>(R.id.button_grant)
+        val platforms = platformRepository.getPlatformsForVersion(Build.VERSION.SDK_INT)
+
+        // Setup button visibility
+        when {
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.Q -> {
+                grantButton.visibility = View.GONE
+                platforms.forEach { findViewById<Button>(it.buttonId).visibility = View.GONE }
+            }
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU -> {
+                label.setText(R.string.tip_saf_selected)
+                platforms.forEach { findViewById<Button>(it.buttonId).visibility = View.GONE }
+            }
+            else -> {
+                label.setText(R.string.tip_saf_selected)
+                grantButton.visibility = View.GONE
+            }
+        }
+
+        // Setup platform switches
+        platforms.forEach { platform ->
+            val switch = findViewById<Switch>(platform.switchId)
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                    switches2[switch] = platform.document
+                }
+                else -> {
+                    switches[switch] = platform.getStoragePath(Build.VERSION.SDK_INT)
+                }
+            }
+        }
+    }
+
+    private fun setupUIComponents() {
+        // Update mod folder display
+        if (modFolder.isEmpty()) {
+            findViewById<TextView>(R.id.mod_text).text = getString(R.string.EMPTY_MOD_FOLDER)
+        } else {
+            findViewById<TextView>(R.id.mod_text).text =
+                getString(R.string.CURRENT_MOD_FOLDER, modFolder)
+        }
+
+        // Set up button click listeners
+        findViewById<Button>(R.id.button_patch).setOnClickListener { beforePatch() }
+        findViewById<Button>(R.id.button_folder).setOnClickListener { selectFolder() }
+        findViewById<Button>(R.id.button_clear).setOnClickListener { showClearConfirmation() }
+        findViewById<Button>(R.id.button_grant).setOnClickListener { showGrantPermissionDialog() }
+        findViewById<Button>(R.id.button_shizuku).setOnClickListener { requestShizukuPermission() }
+
+        // Set up platform button click listeners
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            platformRepository.getPlatformsForVersion(Build.VERSION.SDK_INT).forEach { platform ->
+                findViewById<Button>(platform.buttonId).setOnClickListener {
+                    showPlatformPermissionDialog(platform)
+                }
+            }
+        }
+
+        updateSwitches()
+    }
+
+    private fun requestShizukuPermission() {
+        if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
+            requestPermissions(arrayOf(ShizukuProvider.PERMISSION), SHIZUKU_CODE)
+        } else {
+            Shizuku.requestPermission(SHIZUKU_CODE)
+        }
+    }
+
+    private fun showClearConfirmation() {
+        AlertDialog.Builder(this).apply {
+            setTitle(R.string.CLEAR_TITLE)
+            setMessage(R.string.CLEAR_MESSAGE)
+            setPositiveButton(R.string.CLEAR_OK) { _, _ -> beforeClear() }
+        }.create().show()
+    }
+
+    private fun showGrantPermissionDialog() {
+        AlertDialog.Builder(this).apply {
+            setTitle(R.string.GRANT_PERMISSION_TITLE)
+            setMessage(R.string.GRANT_PERMISSION_MESSAGE)
+            setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ -> handleGrantPermission() }
+        }.create().show()
+    }
+
+    private fun handleGrantPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val sm = getSystemService(STORAGE_SERVICE) as StorageManager
+            val intent = sm.primaryStorageVolume.createOpenDocumentTreeIntent()
+            val startSubDir = "A\u200Bndroid%2Fdata"
+
+            var uri = intent.getParcelableExtra<Uri>("android.provider.extra.INITIAL_URI")
+            var scheme = uri.toString()
+            scheme = scheme.replace("/root/", "/document/")
+            scheme += "%3A$startSubDir"
+            uri = Uri.parse(scheme)
+
+            intent.putExtra("android.provider.extra.INITIAL_URI", uri)
+            startActivityForResult(intent, 44)
+        } else {
+            val intent = Intent("android.intent.action.OPEN_DOCUMENT_TREE").apply {
+                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                        Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                putExtra("android.content.extra.SHOW_ADVANCED", true)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val uri = getSAFTreeUri()
+                    putExtra(
+                        "android.provider.extra.INITIAL_URI",
+                        DocumentsContract.buildDocumentUriUsingTree(
+                            uri,
+                            DocumentsContract.getTreeDocumentId(uri)
+                        )
+                    )
+                }
+            }
+            startActivityForResult(intent, 44)
+        }
+    }
+
+    private fun showPlatformPermissionDialog(platform: PlatformConfig) {
+        AlertDialog.Builder(this).apply {
+            setTitle(R.string.GRANT_PERMISSION_TITLE)
+            setMessage(R.string.GRANT_PERMISSION_MESSAGE)
+            setPositiveButton(R.string.GRANT_PERMISSION_OK) { _, _ ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    val sm = getSystemService(STORAGE_SERVICE) as StorageManager
+                    newPermission(platform.uriEncodedPath, platform.requestCode, sm)
+                }
+            }
+        }.create().show()
+    }
+
     // Granted 상황에 맞춰 사용 가능 갱신
     private fun updateSwitches() {
-        if (mShizukuShell.isReady()) {
-            val onestoreSwitch = findViewById<Switch>(R.id.switch_filter_onestore)
-            val playstoreSwitch = findViewById<Switch>(R.id.switch_filter_playstore)
-            val playstoreJPSwitch = findViewById<Switch>(R.id.switch_filter_playstore_jp)
-            val fanzaSwitch = findViewById<Switch>(R.id.switch_filter_fanza)
-            if (mShizukuShell.checkDirExist("/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_C")) {
-                switches[onestoreSwitch] = "/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_C"
-                onestoreSwitch.apply {
-                    isChecked = true
-                    isEnabled = true
-                }
-            }
-            else {
-                onestoreSwitch.apply {
-                    isChecked = false
-                    isEnabled = false
-                }
-            }
-            if (mShizukuShell.checkDirExist("/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_G")) {
-                switches[playstoreSwitch] = "/storage/emulated/0/Android/data/com.smartjoy.LastOrigin_G"
-                playstoreSwitch.apply {
-                    isChecked = true
-                    isEnabled = true
-                }
-            }
-            else {
-                playstoreSwitch.apply {
-                    isChecked = false
-                    isEnabled = false
-                }
-            }
-            if (mShizukuShell.checkDirExist("/storage/emulated/0/Android/data/com.pig.laojp.aos")) {
-                switches[playstoreJPSwitch] = "/storage/emulated/0/Android/data/com.pig.laojp.aos"
-                playstoreJPSwitch.apply {
-                    isChecked = true
-                    isEnabled = true
-                }
-            }
-            else {
-                playstoreJPSwitch.apply {
-                    isChecked = false
-                    isEnabled = false
-                }
-            }
-            if (mShizukuShell.checkDirExist("/storage/emulated/0/Android/data/jp.co.fanzagames.lastorigin_r")) {
-                switches[fanzaSwitch] = "/storage/emulated/0/Android/data/jp.co.fanzagames.lastorigin_r"
-                fanzaSwitch.apply {
-                    isChecked = true
-                    isEnabled = true
-                }
-            }
-            else {
-                fanzaSwitch.apply {
-                    isChecked = false
-                    isEnabled = false
-                }
-            }
-        }
-        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            for ((switch, doc) in switches2) {
-                val usable = doc != null
+        val platforms = platformRepository.getPlatformsForVersion(Build.VERSION.SDK_INT)
 
-                switch.apply {
-                    isChecked = usable
-                    isEnabled = usable
+        when {
+            mShizukuShell.isReady() -> {
+                platforms.forEach { platform ->
+                    val switch = findViewById<Switch>(platform.switchId)
+                    val fullPath = "/storage/emulated/0/${platform.androidDataPath}"
+
+                    if (mShizukuShell.checkDirExist(fullPath)) {
+                        switches[switch] = fullPath
+                        switch.apply {
+                            isChecked = true
+                            isEnabled = true
+                        }
+                    } else {
+                        switch.apply {
+                            isChecked = false
+                            isEnabled = false
+                        }
+                    }
                 }
             }
-        }
-        else {
-            for ((switch, path) in switches) {
-                val usable = when {
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> this.dataDoc?.let {
-                        findMatchedDoc(
-                            path,
-                            it
-                        )
-                    } != null
-                    else -> File("/storage/emulated/0/$path/files/UnityCache/Shared/").exists()
-                }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                platforms.forEach { platform ->
+                    val switch = findViewById<Switch>(platform.switchId)
+                    val usable = platform.document != null
 
-                switch.apply {
-                    isChecked = usable
-                    isEnabled = usable
+                    switch.apply {
+                        isChecked = usable
+                        isEnabled = usable
+                    }
+                }
+            }
+            else -> {
+                platforms.forEach { platform ->
+                    val switch = findViewById<Switch>(platform.switchId)
+                    val usable = when {
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
+                            this.dataDoc?.let { findMatchedDoc(platform.getStoragePath(Build.VERSION.SDK_INT), it) } != null
+                        else ->
+                            File("/storage/emulated/0/${platform.androidDataPath}/files/UnityCache/Shared/").exists()
+                    }
+
+                    switch.apply {
+                        isChecked = usable
+                        isEnabled = usable
+                    }
                 }
             }
         }
@@ -430,156 +427,79 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("WrongViewCast")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 44 && resultCode == Activity.RESULT_OK) {
-            val uri = data?.data ?: return
-            contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
 
-            val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc != null) {
-                this.dataDoc = doc
-                prefs.edit().putString(PREF_DATA_URI, doc.uri.toString()).apply()
-            }
+        if (resultCode != Activity.RESULT_OK || data?.data == null) return
 
-            this.updateSwitches()
-        }
-        else if (requestCode == 991 && resultCode == Activity.RESULT_OK) {
-            val uri = data?.data ?: return
-            contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
+        val uri = data.data!!
+        contentResolver.takePersistableUriPermission(
+            uri,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        )
 
-            val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) logFunction(this.getString(R.string.FAIL_FOLDER_13))
-            if (doc != null) {
-                doc.name?.let { logFunction(it) }
-                if (doc.name == "com.smartjoy.LastOrigin_C") {
-                    this.oneStoreDoc = doc
-                    prefs.edit().putString(PREF_ONESTORE_URI, doc.uri.toString()).apply()
-                    val switch = findViewById<Switch>(R.id.switch_filter_onestore)
-                    switches2[switch] = this.oneStoreDoc
-                    switch.apply {
-                        isChecked = true
-                        isEnabled = true
+        when (requestCode) {
+            44 -> handleDataUri(uri)
+            9999 -> handleModUri(uri)
+            else -> {
+                platformRepository.getPlatformsForVersion(Build.VERSION.SDK_INT)
+                    .find { it.requestCode == requestCode }
+                    ?.let { platform ->
+                        handlePlatformUri(
+                            uri,
+                            platform,
+                        )
                     }
-                }
-                else {
-                    logFunction(this.getString(R.string.WRONG_FOLDER_13))
-                    this.oneStoreDoc = null
-                }
             }
         }
-        else if (requestCode == 992 && resultCode == Activity.RESULT_OK) {
-            val uri = data?.data ?: return
-            contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
+    }
 
-            val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) logFunction(this.getString(R.string.FAIL_FOLDER_13))
-            if (doc != null) {
-                doc.name?.let { logFunction(it) }
-                if (doc.name == "com.smartjoy.LastOrigin_G") {
-                    this.playStoreDoc = doc
-                    prefs.edit().putString(PREF_PLAYSTORE_URI, doc.uri.toString()).apply()
-                    val switch = findViewById<Switch>(R.id.switch_filter_playstore)
-                    switches2[switch] = this.playStoreDoc
-                    switch.apply {
-                        isChecked = true
-                        isEnabled = true
-                    }
-                }
-                else {
-                    logFunction(this.getString(R.string.WRONG_FOLDER_13))
-                    this.playStoreDoc = null
-                }
-            }
+    private fun handleDataUri(uri: Uri) {
+        DocumentFile.fromTreeUri(this, uri)?.let { doc ->
+            dataDoc = doc
+            prefs.edit().putString(PREF_DATA_URI, doc.uri.toString()).apply()
+            updateSwitches()
         }
-        else if (requestCode == 993 && resultCode == Activity.RESULT_OK) {
-            val uri = data?.data ?: return
-            contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
+    }
 
-            val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) logFunction(this.getString(R.string.FAIL_FOLDER_13))
-            if (doc != null) {
-                doc.name?.let { logFunction(it) }
-                if (doc.name == "com.pig.laojp.aos") {
-                    this.playStoreJpDoc = doc
-                    prefs.edit().putString(PREF_PLAYSTORE_JP_URI, doc.uri.toString()).apply()
-                    val switch = findViewById<Switch>(R.id.switch_filter_playstore_jp)
-                    switches2[switch] = this.playStoreJpDoc
-                    switch.apply {
-                        isChecked = true
-                        isEnabled = true
-                    }
-                }
-                else {
-                    logFunction(this.getString(R.string.WRONG_FOLDER_13))
-                    this.playStoreJpDoc = null
-                }
-            }
-        }
-        else if (requestCode == 994 && resultCode == Activity.RESULT_OK) {
-            val uri = data?.data ?: return
-            contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
+    private fun handlePlatformUri(
+        uri: Uri,
+        platform: PlatformConfig
+    ) {
+        val doc = DocumentFile.fromTreeUri(this, uri)
 
-            val doc = DocumentFile.fromTreeUri(this, uri)
-            if (doc == null) logFunction(this.getString(R.string.FAIL_FOLDER_13))
-            if (doc != null) {
-                doc.name?.let { logFunction(it) }
-                if (doc.name == "jp.co.fanzagames.lastorigin_r") {
-                    this.fanzaDoc = doc
-                    prefs.edit().putString(PREF_FANZA_URI, doc.uri.toString()).apply()
-                    val switch = findViewById<Switch>(R.id.switch_filter_fanza)
-                    switches2[switch] = this.fanzaDoc
-                    switch.apply {
-                        isChecked = true
-                        isEnabled = true
-                    }
-                }
-                else {
-                    logFunction(this.getString(R.string.WRONG_FOLDER_13))
-                    this.fanzaDoc = null
-                }
-            }
-        }
-        else if (requestCode == 9999 && resultCode == Activity.RESULT_OK) {
-            if (data != null) {
-                val uri: Uri? = data.data
-                if (uri != null) {
-                    contentResolver.takePersistableUriPermission(
-                        uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    )
-                    val file = uri.path?.let { File(it) } ?: return
-                    //                    uri.path?.let { Log(it) }
-
-                    val doc = DocumentFile.fromTreeUri(this, uri)
-                    if (doc != null) {
-                        this.modDoc = doc
-                        prefs.edit().putString(PREF_MOD_URI, doc.uri.toString()).apply()
-                    }
-
-                    val split = file.path.split(":").toTypedArray()
-
-                    this.modFolder = split[1] + "/"
-                    prefs.edit().putString(PREF_MOD_FOLDER, this.modFolder).apply()
-                    findViewById<TextView>(R.id.mod_text).text = String.format(this.getString(R.string.CURRENT_MOD_FOLDER), this.modFolder)
-//                    val f = File(this.modFolder)
-                }
-            }
+        if (doc == null) {
+            logFunction(getString(R.string.FAIL_FOLDER_13))
+            return
         }
 
+        doc.name?.let { logFunction(it) }
+
+        if (doc.name == platform.packageName) {
+            platform.document = doc
+            prefs.edit().putString(platform.prefUriKey, doc.uri.toString()).apply()
+            val switch = findViewById<Switch>(platform.switchId)
+            switches2[switch] = doc
+            switch.apply {
+                isChecked = true
+                isEnabled = true
+            }
+        } else {
+            logFunction(getString(R.string.WRONG_FOLDER_13))
+            platform.document = null
+        }
+    }
+
+    private fun handleModUri(uri: Uri) {
+        val file = uri.path?.let { File(it) } ?: return
+        DocumentFile.fromTreeUri(this, uri)?.let { doc ->
+            modDoc = doc
+            prefs.edit().putString(PREF_MOD_URI, doc.uri.toString()).apply()
+        }
+
+        val split = file.path.split(":").toTypedArray()
+        modFolder = split.getOrNull(1)?.plus("/") ?: return
+        prefs.edit().putString(PREF_MOD_FOLDER, modFolder).apply()
+        findViewById<TextView>(R.id.mod_text).text =
+            getString(R.string.CURRENT_MOD_FOLDER, modFolder)
     }
 
     @SuppressLint("SetTextI18n")
@@ -635,20 +555,10 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Main).launch { clearBtn.isEnabled = true }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 0) {
-            this.checkPermission(false)
-        }
-        else if (requestCode == SHIZUKU_CODE) {
-            recheckShizuku()
-        }
+    private fun onRequestPermissionsResult(requestCode: Int, grantResult: Int) {
+        val granted = grantResult == PackageManager.PERMISSION_GRANTED
+        if (granted) recheckShizuku()
     }
-
 
     private fun checkPermission(needRequest: Boolean) {
         val patchBtn = findViewById<Button>(R.id.button_patch)
@@ -692,33 +602,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun recheckShizuku() {
+        val shizukuButton = findViewById<Button>(R.id.button_shizuku)
+        val shizukuLabel = findViewById<TextView>(R.id.tip_text_shizuku)
+        val safLabel = findViewById<TextView>(R.id.tip_text)
+
+        // Hide all platform grant buttons that would be replaced by Shizuku
+        val platformButtons = platformRepository.getPlatformsForVersion(Build.VERSION.SDK_INT)
+            .map { it.buttonId }
+            .map { findViewById<Button>(it) }
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P || !mShizukuShell.isSupported()) {
-            findViewById<Button>(R.id.button_shizuku).visibility = View.GONE
-            findViewById<TextView>(R.id.tip_text_shizuku).visibility = View.GONE
-        }
-        else {
+            shizukuButton.visibility = View.GONE
+            shizukuLabel.visibility = View.GONE
+        } else {
+            // Hide SAF-related UI elements when Shizuku is available
             findViewById<Button>(R.id.button_grant).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_onestore).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_playstore).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_playstore_jp).visibility = View.GONE
-            findViewById<Button>(R.id.button_grant_fanza).visibility = View.GONE
-            findViewById<TextView>(R.id.tip_text).visibility = View.GONE
-            val shizukuLabel = findViewById<TextView>(R.id.tip_text_shizuku)
+            platformButtons.forEach { it.visibility = View.GONE }
+            safLabel.visibility = View.GONE
+
             if (mShizukuShell.isReady()) {
                 shizukuLabel.setText(R.string.tip_saf_selected)
+                shizukuLabel.visibility = View.VISIBLE
                 updateSwitches()
-            } else shizukuLabel.visibility = View.GONE
+            } else {
+                shizukuLabel.visibility = View.GONE
+            }
         }
-    }
-
-    companion object {
-        private const val SHIZUKU_CODE = 10023
-        private const val PREF_MOD_FOLDER = "pref_mod_folder"
-        private const val PREF_MOD_URI = "pref_mod_uri"
-        private const val PREF_DATA_URI = "pref_data_uri"
-        private const val PREF_ONESTORE_URI = "pref_onestore_uri"
-        private const val PREF_PLAYSTORE_URI = "pref_playstore_uri"
-        private const val PREF_PLAYSTORE_JP_URI = "pref_playstore_jp_uri"
-        private const val PREF_FANZA_URI = "pref_fanza_uri"
     }
 }
