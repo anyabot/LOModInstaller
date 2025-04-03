@@ -82,11 +82,11 @@ class MainActivity : AppCompatActivity() {
         var document: DocumentFile? = null
     ) {
         // Automatically generate androidDataPath with invisible character
-        val androidDataPath: String get() = "A\u200Bndroid/data/$packageName"
+        val androidDataPath: String get() = "Android/data/$packageName"
 
         // Helper properties
         val normalizedPackageName: String get() = packageName.replace(".", "\\.")
-        val uriEncodedPath: String get() = androidDataPath.replace("/", "%2F").replace(".", "%2E")
+        val uriEncodedPath: String get() = androidDataPath.replace("Android/", "A\u200Bndroid/").replace("/", "%2F").replace(".", "%2E")
 
         fun getStoragePath(version: Int): String = when {
             version >= Build.VERSION_CODES.TIRAMISU -> uriEncodedPath
@@ -182,7 +182,7 @@ class MainActivity : AppCompatActivity() {
         // Load persisted data
         initializePersistedData()
 
-        // Setup UI based on A\u200Bndroid version
+        // Setup UI based on Android version
         setupVersionSpecificUI()
 
         // Set up remaining UI components
