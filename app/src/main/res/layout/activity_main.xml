@@ -37,7 +37,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
-                android:text="@string/GRANT_PERIMSSION" />
+                android:text="@string/GRANT_PERMISSION" />
 
             <TextView
                 android:id="@+id/tip_text"
@@ -49,7 +49,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
-                android:text="@string/GRANT_PERIMSSION_SHIZUKU" />
+                android:text="@string/GRANT_PERMISSION_SHIZUKU" />
 
             <TextView
                 android:id="@+id/tip_text_shizuku"
@@ -107,7 +107,7 @@
                         android:id="@+id/button_grant_onestore"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERIMSSION"
+                        android:text="@string/GRANT_PERMISSION"
                         android:layout_weight="1"
                         android:textSize="10sp"/>
                 </LinearLayout>
@@ -138,7 +138,7 @@
                         android:id="@+id/button_grant_playstore"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERIMSSION"
+                        android:text="@string/GRANT_PERMISSION"
                         android:layout_weight="1"
                         android:textSize="10sp"/>
 
@@ -170,7 +170,7 @@
                         android:id="@+id/button_grant_playstore_jp"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERIMSSION"
+                        android:text="@string/GRANT_PERMISSION"
                         android:layout_weight="1"
                         android:textSize="10sp"/>
                 </LinearLayout>
@@ -201,7 +201,7 @@
                         android:id="@+id/button_grant_fanza"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERIMSSION"
+                        android:text="@string/GRANT_PERMISSION"
                         android:layout_weight="1"
                         android:textSize="10sp"/>
                 </LinearLayout>
@@ -228,7 +228,7 @@
                         android:id="@+id/button_grant_tw"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERIMSSION"
+                        android:text="@string/GRANT_PERMISSION"
                         android:layout_weight="1"
                         android:textSize="10sp"/>
                 </LinearLayout>
@@ -255,7 +255,7 @@
                         android:id="@+id/button_grant_tw_r"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERIMSSION"
+                        android:text="@string/GRANT_PERMISSION"
                         android:layout_weight="1"
                         android:textSize="10sp"/>
                 </LinearLayout>
@@ -282,7 +282,7 @@
                         android:id="@+id/button_grant_wayi"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERIMSSION"
+                        android:text="@string/GRANT_PERMISSION"
                         android:layout_weight="1"
                         android:textSize="10sp"/>
                 </LinearLayout>
@@ -309,7 +309,7 @@
                         android:id="@+id/button_grant_wayi_r"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERIMSSION"
+                        android:text="@string/GRANT_PERMISSION"
                         android:layout_weight="1"
                         android:textSize="10sp"/>
                 </LinearLayout>

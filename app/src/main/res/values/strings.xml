@@ -25,8 +25,8 @@
     </string>
     <string name="CLEAR_OK">OK</string>
 
-    <string name="GRANT_PERIMSSION">Grant Permission</string>
-    <string name="GRANT_PERIMSSION_SHIZUKU">Grant Shizuku Permission</string>
+    <string name="GRANT_PERMISSION">Grant Permission</string>
+    <string name="GRANT_PERMISSION_SHIZUKU">Grant Shizuku Permission</string>
     <string name="GRANT_PERMISSION_TITLE">Additional Permissions Required</string>
     <string name="GRANT_PERMISSION_MESSAGE">Needs Permissions to access Storage.</string>
     <string name="GRANT_PERMISSION_OK">OK</string>
@@ -37,7 +37,7 @@
 
     <string name="SELECT_MOD">SELECT MOD FOLDER</string>
     <string name="MOD_WARNING">The Mod Folder is the Folder holding mods to be applied, NOT the one to be replaced.</string>
-    <string name="EMPTY_MOD_FOLDER">The Mod Folder is the Folder holding mods to be applied, NOT the one to be replaced.</string>
+    <string name="EMPTY_MOD_FOLDER">No Mod Folder selected.</string>
     <string name="CURRENT_MOD_FOLDER">Current Mod Folder: %s</string>
 
     <string name="COPY_TRY">Try to copy __data from %s</string>
