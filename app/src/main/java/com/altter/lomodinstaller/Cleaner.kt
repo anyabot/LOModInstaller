@@ -11,21 +11,17 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 import kotlin.math.log
 
-fun findMatchedDoc(path: String, doc: DocumentFile): DocumentFile? {
-    val doc1 = doc.findFile(path) ?: return null
-    val doc2 = doc1.findFile("files") ?: return null
-    val doc3 = doc2.findFile("UnityCache") ?: return null
-    val doc4 = doc3.findFile("Shared")
-    if (doc4 != null) return doc4
-    return null
+fun findMatchedDoc(path: String, rootDoc: DocumentFile): DocumentFile? {
+    return rootDoc.findFile(path)
+        ?.findFile("files")
+        ?.findFile("UnityCache")
+        ?.findFile("Shared")
 }
 
-fun findMatchedDoc13(doc: DocumentFile): DocumentFile? {
-    val doc1 = doc.findFile("files") ?: return null
-    val doc2 = doc1.findFile("UnityCache") ?: return null
-    val doc3 = doc2.findFile("Shared")
-    if (doc3 != null) return doc3
-    return null
+fun findMatchedDoc13(rootDoc: DocumentFile): DocumentFile? {
+    return rootDoc.findFile("files")
+        ?.findFile("UnityCache")
+        ?.findFile("Shared")
 }
 
 fun xcopy(context: Context, from: DocumentFile, to: DocumentFile): Boolean {

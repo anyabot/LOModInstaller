@@ -177,6 +177,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         platformRepository = PlatformRepository(this, prefs)
+        this.checkPermission(true)
         Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER)
 
         // Load persisted data
@@ -558,6 +559,16 @@ class MainActivity : AppCompatActivity() {
     private fun onRequestPermissionsResult(requestCode: Int, grantResult: Int) {
         val granted = grantResult == PackageManager.PERMISSION_GRANTED
         if (granted) recheckShizuku()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 0) {
+            this.checkPermission(false)
+        }
+        else if (requestCode == SHIZUKU_CODE) {
+            recheckShizuku()
+        }
     }
 
     private fun checkPermission(needRequest: Boolean) {
