@@ -244,7 +244,7 @@
                         android:layout_marginEnd="10dp"
                         android:layout_marginRight="10dp"
                         android:contentDescription="@string/platform_tw_r"
-                        app:srcCompat="@drawable/pmang" />
+                        app:srcCompat="@drawable/pmang_r" />
                     <Switch
                         android:id="@+id/switch_filter_tw_r"
                         android:layout_width="0dp"
@@ -253,6 +253,33 @@
                         android:layout_weight="2"/>
                     <Button
                         android:id="@+id/button_grant_tw_r"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/GRANT_PERMISSION"
+                        android:layout_weight="1"
+                        android:textSize="10sp"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginVertical="3dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="10dp"
+                        android:layout_marginRight="10dp"
+                        android:contentDescription="@string/platform_tw_erolabs_r"
+                        app:srcCompat="@drawable/pmang" />
+                    <Switch
+                        android:id="@+id/switch_filter_tw_erolabs_r"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/platform_tw_erolabs_r"
+                        android:layout_weight="2"/>
+                    <Button
+                        android:id="@+id/button_grant_tw_erolabs_r"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="@string/GRANT_PERMISSION"
