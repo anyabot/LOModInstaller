@@ -10,6 +10,7 @@
     <string name="platform_fanza_jp">日服(Fanza)</string>
     <string name="platform_tw">台湾版(谷歌版)</string>
     <string name="platform_tw_r">台湾版(无和谐)</string>
+    <string name="platform_tw_erolabs_r">台湾版(Erolabs无和谐)</string>
     <string name="platform_wayi">台湾版(香蕉和谐版)</string>
     <string name="platform_wayi_r">台湾版(香蕉无和谐)</string>
 
