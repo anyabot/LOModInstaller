@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         const val PREF_PLAYSTORE_JP_URI = "pref_playstore_jp_uri"
         const val PREF_FANZA_URI = "pref_fanza_uri"
         const val PREF_TW_URI = "pref_tw_uri"
-        const val PREF_TW_R_URI = "pref_tw_r_uri"
+        const val PREF_TW_R_URI = "pref_tw_pmang_r_uri"
         const val PREF_TW_EROLABS_R_URI = "pref_tw_erolabs_r_uri"
         const val PREF_WAYI_URI = "pref_wayi_uri"
         const val PREF_WAYI_R_URI = "pref_wayi_r_uri"
@@ -133,9 +133,9 @@ class MainActivity : AppCompatActivity() {
                 requestCode = 995
             ),
             PlatformConfig(
-                buttonId = R.id.button_grant_tw_r,
-                switchId = R.id.switch_filter_tw_r,
-                prefUriKey = PREF_TW_R_URI,
+                buttonId = R.id.button_grant_tw_erolabs_r,
+                switchId = R.id.switch_filter_tw_erolabs_r,
+                prefUriKey = PREF_TW_EROLABS_R_URI,
                 packageName = "com.valofe.laotw.ero",
                 requestCode = 996
             ),
@@ -154,9 +154,9 @@ class MainActivity : AppCompatActivity() {
                 requestCode = 998
             ),
             PlatformConfig(
-                buttonId = R.id.button_grant_tw_erolabs_r,
-                switchId = R.id.switch_filter_tw_erolabs_r,
-                prefUriKey = PREF_TW_EROLABS_R_URI,
+                buttonId = R.id.button_grant_tw_r,
+                switchId = R.id.switch_filter_tw_r,
+                prefUriKey = PREF_TW_R_URI,
                 packageName = "com.valofe.laotw.pmang",
                 requestCode = 999
             ),
