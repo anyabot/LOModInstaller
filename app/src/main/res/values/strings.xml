@@ -8,14 +8,24 @@
     <string name="platform_playstore">KR Censored</string>
     <string name="platform_playstore_jp">JP Censored</string>
     <string name="platform_fanza_jp">JP Uncensored</string>
-    <string name="platform_tw">TW Censored</string>
+    <string name="platform_tw">TW / GL Censored</string>
     <string name="platform_tw_r">TW (Pmang)</string>
-    <string name="platform_tw_erolabs_r">TW (Erolabs)</string>
+    <string name="platform_tw_erolabs_r">TW / GL (Erolabs)</string>
+    <string name="platform_tw_vfun">GL (VFUN)</string>
     <string name="platform_wayi">TW 2 Censored</string>
     <string name="platform_wayi_r">TW 2 Uncensored</string>
 
+    <string name="tab_permissions">Permissions</string>
+    <string name="tab_patch">Patch</string>
+
+    <string name="group_kr">Korea</string>
+    <string name="group_jp">Japan</string>
+    <string name="group_tw_gl">Taiwan / Global</string>
+
     <string name="patch_btn">Patch!</string>
     <string name="clear_btn">Clear!</string>
+    <string name="copy_log_btn">Copy Log</string>
+    <string name="clear_log_btn">Clear Log</string>
 
     <string name="CLEAR_TITLE">Confirmation</string>
     <string name="CLEAR_MESSAGE">This Function is only used to remove Mods and fix Modding Error. Folders in Shared with the same name as those in the Mod Folder will be removed.
@@ -29,7 +39,7 @@
     <string name="GRANT_PERMISSION">Grant Permission</string>
     <string name="GRANT_PERMISSION_SHIZUKU">Grant Shizuku Permission</string>
     <string name="GRANT_PERMISSION_TITLE">Additional Permissions Required</string>
-    <string name="GRANT_PERMISSION_MESSAGE">Needs Permissions to access Storage.</string>
+    <string name="GRANT_PERMISSION_MESSAGE">Needs Permissions to access Storage.\n\nIf the file picker does not open in Android/data, it may be restricted on your Android version. Try using Shizuku instead.</string>
     <string name="GRANT_PERMISSION_OK">OK</string>
     <string name="GRANT_INVALID_PATH">You requested an invalid path. please try again.</string>
     <string name="GRANT_FAILED">Permission not obtained. Please try again.</string>
@@ -37,9 +47,10 @@
     <string name="GRANT_ALREADY_GRANTED">Permission already Granted.</string>
 
     <string name="SELECT_MOD">SELECT MOD FOLDER</string>
+    <string name="SELECT_MOD_SHORT">Mod Folder</string>
     <string name="MOD_WARNING">The Mod Folder is the Folder holding mods to be applied, NOT the one to be replaced.</string>
-    <string name="EMPTY_MOD_FOLDER">No Mod Folder selected.</string>
-    <string name="CURRENT_MOD_FOLDER">Current Mod Folder: %s</string>
+    <string name="EMPTY_MOD_FOLDER">No mod folder.</string>
+    <string name="CURRENT_MOD_FOLDER">Mod: %s</string>
 
     <string name="COPY_TRY">Try to copy __data from %s</string>
     <string name="MORE_THAN_ONE">More than one file or folder in %s</string>
