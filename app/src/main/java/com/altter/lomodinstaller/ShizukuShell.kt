@@ -72,12 +72,17 @@ class ShizukuShell(serviceCallback: KFunction0<Unit>? = null) {
     }
 
     fun removeFile(path: String): String {
-        val result = runShizukuCommand(arrayOf("rm", "-f", path)) ?: return "rm: service not ready"
+        runShizukuCommand(arrayOf("rm", "-f", path))
+        if (!checkDirExist(path)) return "Removed: ${path.substringAfterLast('/')}"
+        // rm failed (permission denied on parent dir) — zero out the file instead
+        val infoPath = path.substringBeforeLast('/') + "/__info"
+        runShizukuCommand(arrayOf("cp", "/dev/null", infoPath))
+        val result = runShizukuCommand(arrayOf("cp", "/dev/null", path)) ?: return "clear: service not ready"
         val errMsg = result.trim()
-        return if (!checkDirExist(path)) {
-            "Removed: ${path.substringAfterLast('/')}"
+        return if (checkDirExist(path)) {
+            "Cleared: ${path.substringAfterLast('/')}"
         } else {
-            "rm failed: ${path.substringAfterLast('/')}${if (errMsg.isNotEmpty()) " ($errMsg)" else ""}"
+            "clear failed: ${path.substringAfterLast('/')}${if (errMsg.isNotEmpty()) " ($errMsg)" else ""}"
         }
     }
 }

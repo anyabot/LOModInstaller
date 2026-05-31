@@ -140,11 +140,18 @@ class DocumentPlatform(
     override fun copy(source: PatchItem, dest: PatchItem) =
         xcopy(context, (source as PatchItem.DocItem).doc, (dest as PatchItem.DocItem).doc)
 
-    override fun delete(item: PatchItem): String = try {
-        DocumentsContract.deleteDocument(context.contentResolver, (item as PatchItem.DocItem).doc.uri)
-        "Removed: ${item.name}"
-    } catch (e: Exception) {
-        "rm failed: ${item.name} (${e.message})"
+    override fun delete(item: PatchItem): String {
+        val doc = (item as PatchItem.DocItem).doc
+        return try {
+            DocumentsContract.deleteDocument(context.contentResolver, doc.uri)
+            "Removed: ${item.name}"
+        } catch (e: Exception) {
+            doc.parentFile?.findFile("__info")?.let { xwrite(context, it.uri, ByteArray(0)) }
+            if (xwrite(context, doc.uri, ByteArray(0)))
+                "Cleared: ${item.name}"
+            else
+                "clear failed: ${item.name} (${e.message})"
+        }
     }
 }
 
@@ -186,7 +193,14 @@ class FilePlatform(
 
     override fun delete(item: PatchItem): String {
         val f = (item as PatchItem.FileItem).file
-        return if (f.delete()) "Removed: ${f.name}" else "rm failed: ${f.name}"
+        if (f.delete()) return "Removed: ${f.name}"
+        f.parentFile?.resolve("__info")?.takeIf { it.exists() }?.writeBytes(ByteArray(0))
+        return try {
+            f.writeBytes(ByteArray(0))
+            "Cleared: ${f.name}"
+        } catch (e: Exception) {
+            "clear failed: ${f.name} (${e.message})"
+        }
     }
 }
 
