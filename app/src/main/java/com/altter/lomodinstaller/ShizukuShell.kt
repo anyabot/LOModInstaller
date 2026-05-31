@@ -71,8 +71,13 @@ class ShizukuShell(serviceCallback: KFunction0<Unit>? = null) {
         runShizukuCommand(arrayOf("cp", fromPath, toPath))
     }
 
-    fun removeFolder(path: String): String? {
-        val path2 = path.replace(" ", Regex.escapeReplacement("\\ "))
-        return runShizukuCommand(arrayOf("rm", "-rv", path))
+    fun removeFile(path: String): String {
+        val result = runShizukuCommand(arrayOf("rm", "-f", path)) ?: return "rm: service not ready"
+        val errMsg = result.trim()
+        return if (!checkDirExist(path)) {
+            "Removed: ${path.substringAfterLast('/')}"
+        } else {
+            "rm failed: ${path.substringAfterLast('/')}${if (errMsg.isNotEmpty()) " ($errMsg)" else ""}"
+        }
     }
 }

@@ -16,6 +16,8 @@
 
     <string name="patch_btn">打补丁!</string>
     <string name="clear_btn">清除!</string>
+    <string name="copy_log_btn">复制日志</string>
+    <string name="clear_log_btn">清除日志</string>
 
     <string name="CLEAR_TITLE">确认</string>
     <string name="CLEAR_MESSAGE">此功能仅用于删除Mod和修复Mod导致的错误.这将删除游戏目录"Shared"中与Mod文件夹中同名的文件夹.
@@ -37,9 +39,10 @@
     <string name="GRANT_ALREADY_GRANTED">您已经授权了.</string>
 
     <string name="SELECT_MOD">选择MOD所处文件夹</string>
+    <string name="SELECT_MOD_SHORT">MOD文件夹</string>
     <string name="MOD_WARNING">MOD文件夹是保存要应用的MOD的文件夹，而不是要替换的文件夹.</string>
-    <string name="EMPTY_MOD_FOLDER">未選擇 MOD 資料夾。</string>
-    <string name="CURRENT_MOD_FOLDER">目前的 MOD 資料夾：%s</string>
+    <string name="EMPTY_MOD_FOLDER">未选择MOD文件夹。</string>
+    <string name="CURRENT_MOD_FOLDER">MOD：%s</string>
 
     <string name="COPY_TRY">尝试从 %s 复制 __data</string>
     <string name="MORE_THAN_ONE">%s 中包含不止一个文件或文件夹</string>

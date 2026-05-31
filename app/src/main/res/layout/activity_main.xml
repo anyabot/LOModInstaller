@@ -1,390 +1,182 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <LinearLayout
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:fillViewport="true">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <!--            <TextView-->
-            <!--                android:layout_width="match_parent"-->
-            <!--                android:layout_height="wrap_content"-->
-            <!--                android:layout_marginBottom="20dp"-->
-            <!--                android:text="@string/app_description" />-->
-            <!--            <TextView-->
-            <!--                android:id="@+id/grant_description"-->
-            <!--                android:layout_width="match_parent"-->
-            <!--                android:layout_height="wrap_content"-->
-            <!--                android:text="@string/app_require_saf_permission" />-->
-            <Button
-                android:id="@+id/button_grant"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:text="@string/GRANT_PERMISSION" />
+        android:layout_height="wrap_content"
+        app:tabMode="fixed"
+        app:tabGravity="fill"
+        app:tabIndicatorHeight="3dp"
+        app:tabIndicatorFullWidth="false" />
 
-            <TextView
-                android:id="@+id/tip_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+    <!-- Tab 1: Permissions -->
+    <ScrollView
+        android:id="@+id/tab_permissions_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="10dp">
 
-            <Button
-                android:id="@+id/button_shizuku"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:text="@string/GRANT_PERMISSION_SHIZUKU" />
-
-            <TextView
-                android:id="@+id/tip_text_shizuku"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <Button
-                android:id="@+id/button_folder"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:text="@string/SELECT_MOD" />
-
-            <TextView
-                android:id="@+id/mod_warning"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/MOD_WARNING" />
-
-            <TextView
-                android:id="@+id/mod_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="3dp"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginVertical="3dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginRight="10dp"
-                        android:contentDescription="@string/platform_onestore"
-                        app:srcCompat="@drawable/onestore" />
-
-
-                    <Switch
-                        android:id="@+id/switch_filter_onestore"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/platform_onestore"
-                        android:layout_weight="2"
-                        />
-                    <Button
-                        android:id="@+id/button_grant_onestore"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERMISSION"
-                        android:layout_weight="1"
-                        android:textSize="10sp"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginVertical="3dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginRight="10dp"
-                        android:contentDescription="@string/platform_onestore"
-                        app:srcCompat="@drawable/playstore"
-                        />
-
-                    <Switch
-                        android:id="@+id/switch_filter_playstore"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/platform_playstore"
-                        android:layout_weight="2"/>
-                    <Button
-                        android:id="@+id/button_grant_playstore"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERMISSION"
-                        android:layout_weight="1"
-                        android:textSize="10sp"/>
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginVertical="3dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginRight="10dp"
-                        android:contentDescription="@string/platform_playstore_jp"
-                        app:srcCompat="@drawable/playstore_jp" />
-
-                    <Switch
-                        android:id="@+id/switch_filter_playstore_jp"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/platform_playstore_jp"
-                        android:layout_weight="2"/>
-
-                    <Button
-                        android:id="@+id/button_grant_playstore_jp"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERMISSION"
-                        android:layout_weight="1"
-                        android:textSize="10sp"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginVertical="3dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginRight="10dp"
-                        android:contentDescription="@string/platform_fanza_jp"
-                        app:srcCompat="@drawable/fanza" />
-
-                    <Switch
-                        android:id="@+id/switch_filter_fanza"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/platform_fanza_jp"
-                        android:layout_weight="2"/>
-
-                    <Button
-                        android:id="@+id/button_grant_fanza"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERMISSION"
-                        android:layout_weight="1"
-                        android:textSize="10sp"/>
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginVertical="3dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginRight="10dp"
-                        android:contentDescription="@string/platform_tw"
-                        app:srcCompat="@drawable/pmang" />
-                    <Switch
-                        android:id="@+id/switch_filter_tw"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/platform_tw"
-                        android:layout_weight="2"/>
-                    <Button
-                        android:id="@+id/button_grant_tw"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERMISSION"
-                        android:layout_weight="1"
-                        android:textSize="10sp"/>
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginVertical="3dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginRight="10dp"
-                        android:contentDescription="@string/platform_tw_erolabs_r"
-                        app:srcCompat="@drawable/pmang" />
-                    <Switch
-                        android:id="@+id/switch_filter_tw_erolabs_r"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/platform_tw_erolabs_r"
-                        android:layout_weight="2"/>
-                    <Button
-                        android:id="@+id/button_grant_tw_erolabs_r"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERMISSION"
-                        android:layout_weight="1"
-                        android:textSize="10sp"/>
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginVertical="3dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginRight="10dp"
-                        android:contentDescription="@string/platform_tw_r"
-                        app:srcCompat="@drawable/pmang_r" />
-                    <Switch
-                        android:id="@+id/switch_filter_tw_r"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/platform_tw_r"
-                        android:layout_weight="2"/>
-                    <Button
-                        android:id="@+id/button_grant_tw_r"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERMISSION"
-                        android:layout_weight="1"
-                        android:textSize="10sp"/>
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginVertical="3dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginRight="10dp"
-                        android:contentDescription="@string/platform_wayi"
-                        app:srcCompat="@drawable/pmang" />
-                    <Switch
-                        android:id="@+id/switch_filter_wayi"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/platform_wayi"
-                        android:layout_weight="2"/>
-                    <Button
-                        android:id="@+id/button_grant_wayi"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERMISSION"
-                        android:layout_weight="1"
-                        android:textSize="10sp"/>
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginVertical="3dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginRight="10dp"
-                        android:contentDescription="@string/platform_wayi_r"
-                        app:srcCompat="@drawable/pmang" />
-                    <Switch
-                        android:id="@+id/switch_filter_wayi_r"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/platform_wayi_r"
-                        android:layout_weight="2"/>
-                    <Button
-                        android:id="@+id/button_grant_wayi_r"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/GRANT_PERMISSION"
-                        android:layout_weight="1"
-                        android:textSize="10sp"/>
-                </LinearLayout>
-            </LinearLayout>
-
-            <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="10dp">
-
-                <TextView
-                    android:id="@+id/textLog"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:lineSpacingExtra="4sp" />
-            </ScrollView>
-
-        </LinearLayout>
-        </ScrollView>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="5dp"
-            android:gravity="center_vertical"
+            android:orientation="vertical">
+
+            <!-- SAF Permission Card (hidden on Android <Q and 13+, and when Shizuku active) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_saf"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                app:cardElevation="3dp"
+                app:cardCornerRadius="10dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+                    <Button
+                        android:id="@+id/button_grant"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/GRANT_PERMISSION" />
+                    <TextView
+                        android:id="@+id/tip_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Shizuku Permission Card (hidden when Shizuku not supported) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_shizuku"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                app:cardElevation="3dp"
+                app:cardCornerRadius="10dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+                    <Button
+                        android:id="@+id/button_shizuku"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/GRANT_PERMISSION_SHIZUKU" />
+                    <TextView
+                        android:id="@+id/tip_text_shizuku"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Platform cards inflated dynamically from PlatformRepository -->
+            <LinearLayout
+                android:id="@+id/platform_cards_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Tab 2: Patch & Log -->
+    <LinearLayout
+        android:id="@+id/tab_patch_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone">
+
+        <!-- Log area -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+            <TextView
+                android:id="@+id/textLog"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:lineSpacingExtra="3sp"
+                android:textSize="12sp"
+                android:padding="4dp" />
+        </ScrollView>
+
+        <!-- Log utility buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/button_copy_log"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:text="@string/copy_log_btn"
+                android:textSize="11sp" />
+            <Button
+                android:id="@+id/button_clear_log"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:text="@string/clear_log_btn"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Action buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:orientation="horizontal">
             <Button
                 android:id="@+id/button_clear"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:text="@string/clear_btn"
-                app:backgroundTint="#424242"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
                 android:layout_weight="1"
-                android:layout_marginHorizontal="5dp"
-                />
+                android:text="@string/clear_btn"
+                app:backgroundTint="#424242" />
             <Button
                 android:id="@+id/button_patch"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="2"
                 android:text="@string/patch_btn"
                 app:backgroundTint="#0000FF"
                 app:icon="@drawable/ic_launcher_foreground"
                 app:iconGravity="textStart"
                 app:iconSize="40dp"
                 app:iconTint="#FFFFFF"
-                app:iconTintMode="multiply"
-                android:layout_weight="2"
-                android:layout_marginHorizontal="5dp"/>
+                app:iconTintMode="multiply" />
         </LinearLayout>
+
     </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
