@@ -58,17 +58,26 @@ class ShizukuShell(serviceCallback: KFunction0<Unit>? = null) {
     }
 
     fun checkDirExist(path: String): Boolean {
-        val res = runShizukuCommand(arrayOf("ls", path))
-        return res != null && !res.contains("No such file or directory")
+        val res = runShizukuCommand(arrayOf("ls", "-d", path))
+        return !res.isNullOrBlank() && !res.contains("No such file or directory") && !res.contains("ls:")
     }
 
     fun getSubDirs(path: String): List<String> {
         val res = runShizukuCommand(arrayOf("ls", path))
-        return res?.split("\n")?.filter { s -> s.isNotEmpty() } ?: emptyList()
+        Log.d("ShizukuShell", "getSubDirs($path) => ${res?.take(200)}")
+        if (res.isNullOrBlank()) return emptyList()
+        return res.split("\n").filter { s -> s.isNotEmpty() }
     }
 
-    fun copyFile(fromPath: String, toPath: String) {
-        runShizukuCommand(arrayOf("cp", fromPath, toPath))
+    // Returns null on success, error message on failure
+    fun copyFile(fromPath: String, toPath: String): String? {
+        val lsSrc = runShizukuCommand(arrayOf("ls", fromPath))
+        val res = runShizukuCommand(arrayOf("cp", fromPath, toPath))
+        return when {
+            res == null -> "service not ready"
+            res.isBlank() -> null
+            else -> "src=$fromPath ls=$lsSrc | dst=$toPath | cp=$res"
+        }
     }
 
     fun removeFile(path: String): String {

@@ -88,32 +88,48 @@ class FileModSource(private val modPath: String, private val storages: List<Stri
 }
 
 class ShellModSource(private val modPath: String, private val shell: ShizukuShell) : ModSource {
-    override fun listTargets() = shell.getSubDirs(modPath)
-
-    override fun findSourceData(targetName: String): PatchItem? {
-        val direct = "$modPath/$targetName/__data"
-        if (shell.checkDirExist(direct)) return PatchItem.ShellItem(direct)
-        for (sub in shell.getSubDirs("$modPath/$targetName")) {
-            val subPath = "$modPath/$targetName/$sub/__data"
-            if (shell.checkDirExist(subPath)) return PatchItem.ShellItem(subPath)
+    private val cachedTargets: List<String> by lazy { shell.getSubDirs(modPath) }
+    private val cachedSourceData: Map<String, PatchItem?> by lazy {
+        cachedTargets.associateWith { targetName ->
+            val direct = "$modPath/$targetName/__data"
+            if (shell.checkDirExist(direct)) return@associateWith PatchItem.ShellItem(direct)
+            for (sub in shell.getSubDirs("$modPath/$targetName")) {
+                val subPath = "$modPath/$targetName/$sub/__data"
+                if (shell.checkDirExist(subPath)) return@associateWith PatchItem.ShellItem(subPath)
+            }
+            null
         }
-        return null
     }
+
+    override fun listTargets() = cachedTargets
+    override fun findSourceData(targetName: String) = cachedSourceData[targetName]
 }
 
 // ---- Patch platform ----
 
 interface PatchPlatform {
     val switch: Switch
+    val name: String
     fun findSharedTarget(targetName: String): PatchItem?
     fun children(dir: PatchItem): List<PatchItem>
     fun findDataFile(gibberish: PatchItem): PatchItem?
-    fun copy(source: PatchItem, dest: PatchItem): Boolean
+    // Find the __data file inside targetDir by looking for any subfolder containing both __data and __info
+    fun findDestData(targetDir: PatchItem): PatchItem? {
+        val subs = children(targetDir)
+        // prefer subfolder containing __info (valid Unity cache entry), fall back to any with __data
+        val withInfo = subs.firstOrNull { sub -> findDataFile(sub) != null && hasInfoFile(sub) }
+        val withData = withInfo ?: subs.firstOrNull { sub -> findDataFile(sub) != null }
+        return withData?.let { findDataFile(it) }
+    }
+    fun hasInfoFile(dir: PatchItem): Boolean
+    // Returns null on success, error message on failure
+    fun copy(source: PatchItem, dest: PatchItem): String?
     fun delete(item: PatchItem): String
 }
 
 class DocumentPlatform(
     override val switch: Switch,
+    override val name: String,
     private val context: Context,
     private val sharedDoc: DocumentFile
 ) : PatchPlatform {
@@ -137,8 +153,11 @@ class DocumentPlatform(
         return doc.listFiles().find { it.name == "__data" }?.let { PatchItem.DocItem(it) }
     }
 
-    override fun copy(source: PatchItem, dest: PatchItem) =
-        xcopy(context, (source as PatchItem.DocItem).doc, (dest as PatchItem.DocItem).doc)
+    override fun hasInfoFile(dir: PatchItem) =
+        (dir as PatchItem.DocItem).doc.listFiles().any { it.name == "__info" }
+
+    override fun copy(source: PatchItem, dest: PatchItem): String? =
+        if (xcopy(context, (source as PatchItem.DocItem).doc, (dest as PatchItem.DocItem).doc)) null else "write failed"
 
     override fun delete(item: PatchItem): String {
         val doc = (item as PatchItem.DocItem).doc
@@ -157,6 +176,7 @@ class DocumentPlatform(
 
 class FilePlatform(
     override val switch: Switch,
+    override val name: String,
     private val packagePath: String,
     private val storages: List<String>
 ) : PatchPlatform {
@@ -186,10 +206,13 @@ class FilePlatform(
         return File(f, "__data").takeIf { it.exists() }?.let { PatchItem.FileItem(it) }
     }
 
-    override fun copy(source: PatchItem, dest: PatchItem): Boolean = try {
+    override fun hasInfoFile(dir: PatchItem) =
+        File((dir as PatchItem.FileItem).file, "__info").exists()
+
+    override fun copy(source: PatchItem, dest: PatchItem): String? = try {
         FileUtils.copyFile((source as PatchItem.FileItem).file, (dest as PatchItem.FileItem).file)
-        true
-    } catch (e: Exception) { false }
+        null
+    } catch (e: Exception) { e.message ?: "unknown error" }
 
     override fun delete(item: PatchItem): String {
         val f = (item as PatchItem.FileItem).file
@@ -206,6 +229,7 @@ class FilePlatform(
 
 class ShellPlatform(
     override val switch: Switch,
+    override val name: String,
     private val gamePath: String,
     private val shell: ShizukuShell
 ) : PatchPlatform {
@@ -226,10 +250,11 @@ class ShellPlatform(
         return if (shell.checkDirExist(path)) PatchItem.ShellItem(path) else null
     }
 
-    override fun copy(source: PatchItem, dest: PatchItem): Boolean {
+    override fun hasInfoFile(dir: PatchItem) =
+        shell.checkDirExist("${(dir as PatchItem.ShellItem).path}/__info")
+
+    override fun copy(source: PatchItem, dest: PatchItem): String? =
         shell.copyFile((source as PatchItem.ShellItem).path, (dest as PatchItem.ShellItem).path)
-        return true
-    }
 
     override fun delete(item: PatchItem) = shell.removeFile((item as PatchItem.ShellItem).path)
 }
@@ -246,46 +271,52 @@ fun runPatcher(
 
     for ((mod, platform) in platformMods) {
         if (!platform.switch.isChecked) continue
+
+        // Phase 1: resolve source and destination for this platform before any copy/delete
         val targets = mod.listTargets()
+        logFunction("--- ${platform.name} | targets: ${targets.size} [${targets.joinToString()}] ---")
         if (targets.isEmpty()) continue
+
+        data class PatchJob(val targetName: String, val sourceData: PatchItem, val destData: PatchItem)
+        val jobs = mutableListOf<PatchJob>()
+
         for (targetName in targets) {
             val sourceData = mod.findSourceData(targetName)
             if (sourceData == null) {
                 logFunction(String.format(context.getString(R.string.SRC_NO_DATA), targetName))
                 continue
             }
-
             val sharedTarget = platform.findSharedTarget(targetName)
             if (sharedTarget == null) {
                 logFunction(String.format(context.getString(R.string.NO_DEST), targetName))
                 continue
             }
-
-            val childList = platform.children(sharedTarget)
-            if (childList.isEmpty()) {
-                logFunction(String.format(context.getString(R.string.DEST_NO_DATA), targetName))
-                continue
-            }
-            if (childList.size > 1) {
-                logFunction(String.format(context.getString(R.string.MORE_THAN_ONE), targetName))
-                continue
-            }
-
-            val destData = platform.findDataFile(childList[0])
+            val destData = platform.findDestData(sharedTarget)
             if (destData == null) {
                 logFunction(String.format(context.getString(R.string.DEST_NO_DATA), targetName))
                 continue
             }
+            jobs.add(PatchJob(targetName, sourceData, destData))
+        }
 
+        // Phase 2: execute copies/deletes for this platform
+        for (job in jobs) {
             when (mode) {
                 1 -> {
-                    logFunction(String.format(context.getString(R.string.COPY_TRY), targetName))
-                    if (platform.copy(sourceData, destData))
-                        logFunction(String.format(context.getString(R.string.COPY_DONE), targetName))
+                    logFunction(String.format(context.getString(R.string.COPY_TRY), job.targetName))
+                    val srcPath = if (job.sourceData is PatchItem.ShellItem) job.sourceData.path else job.sourceData.name
+                    val dstPath = if (job.destData is PatchItem.ShellItem) job.destData.path else job.destData.name
+                    logFunction("  src: $srcPath")
+                    logFunction("  dst: $dstPath")
+                    val err = platform.copy(job.sourceData, job.destData)
+                    if (err == null)
+                        logFunction(String.format(context.getString(R.string.COPY_DONE), job.targetName))
+                    else
+                        logFunction(String.format(context.getString(R.string.COPY_FAIL), job.targetName, err))
                 }
                 2 -> {
-                    logFunction(String.format(context.getString(R.string.DELETE_START), targetName))
-                    logFunction(platform.delete(destData))
+                    logFunction(String.format(context.getString(R.string.DELETE_START), job.targetName))
+                    logFunction(platform.delete(job.destData))
                 }
             }
         }

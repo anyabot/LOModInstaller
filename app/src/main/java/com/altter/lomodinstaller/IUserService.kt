@@ -1,17 +1,16 @@
 package com.altter.lomodinstaller
 
 import java.io.BufferedReader
+import java.io.BufferedWriter
 import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import kotlin.system.exitProcess
 
-
 class UserService : IUserService.Stub {
-    //Include an empty constructor.
-    constructor() {
-    }
+    constructor()
 
     override fun destroy() {
-        //Shizuku wants the service to be killed. Clean up and exit.
+        shellProcess?.destroy()
         exitProcess(0)
     }
 
@@ -19,49 +18,45 @@ class UserService : IUserService.Stub {
         exitProcess(0)
     }
 
-//    override fun runShellCommand(command: String?): String {
-//        var process: Process? = null
-//        val output = StringBuilder()
-//        try {
-//            process = Runtime.getRuntime().exec(command, null, null)
-//            val mInput = BufferedReader(InputStreamReader(process.inputStream))
-//            val mError = BufferedReader(InputStreamReader(process.errorStream))
-//            process.waitFor()
-//            var line: String?
-//            while (mInput.readLine().also { line = it } != null) {
-//                output.append(line).append("\n")
-//            }
-//            while (mError.readLine().also { line = it } != null) {
-//                output.append(line).append("\n")
-//            }
-//        } catch (ignored: Exception) {
-//
-//        } finally {
-//            process?.destroy()
-//        }
-//        return output.toString()
-//    }
+    private var shellProcess: Process? = null
+    private var shellIn: BufferedWriter? = null
+    private var shellOut: BufferedReader? = null
 
+    @Synchronized
+    private fun newShell() {
+        shellProcess?.destroy()
+        val p = Runtime.getRuntime().exec("sh")
+        shellProcess = p
+        shellIn = BufferedWriter(OutputStreamWriter(p.outputStream))
+        shellOut = BufferedReader(InputStreamReader(p.inputStream))
+    }
+
+    @Synchronized
     override fun runShellCommands(commands: Array<String>): String {
-        var process: Process? = null
-        val output = StringBuilder()
-        try {
-            process = Runtime.getRuntime().exec(commands, null, null)
-            val mInput = BufferedReader(InputStreamReader(process.inputStream))
-            val mError = BufferedReader(InputStreamReader(process.errorStream))
-            process.waitFor()
-            var line: String?
-            while (mInput.readLine().also { line = it } != null) {
-                output.append(line).append("\n")
-            }
-            while (mError.readLine().also { line = it } != null) {
-                output.append(line).append("\n")
-            }
-        } catch (ignored: Exception) {
+        if (shellProcess?.isAlive != true) newShell()
+        val writer = shellIn ?: return ""
+        val reader = shellOut ?: return ""
 
-        } finally {
-            process?.destroy()
+        val sentinel = "____END____"
+        val cmd = commands.joinToString(" ") { arg ->
+            if (arg.contains(" ") || arg.contains("'")) "\"${arg.replace("\"", "\\\"")}\"" else arg
         }
+        writer.write("$cmd 2>&1; echo $sentinel\n")
+        writer.flush()
+
+        val output = StringBuilder()
+        var line: String?
+        while (reader.readLine().also { line = it } != null) {
+            if (line == sentinel) break
+            output.append(line).append("\n")
+        }
+
+        // cp into Android/data can disrupt the FUSE transport; restart shell after it completes
+        if (commands.firstOrNull() == "cp") {
+            Thread.sleep(500)
+            newShell()
+        }
+
         return output.toString()
     }
 }

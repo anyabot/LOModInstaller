@@ -52,6 +52,7 @@
     <string name="NO_DATA_DOC">未找到Data文件夹</string>
     <string name="NO_DEST">%s 文件夹在Shared中不存在</string>
     <string name="COPY_DONE">已从 %s 复制 __data</string>
+    <string name="COPY_FAIL">从 %s 复制 __data 失败：%s</string>
     <string name="DEST_NO_DATA">Shared文件夹中的目标 ％s 中不存在 __data</string>
     <string name="SRC_NO_DATA">Mod文件夹中的源 ％s 中不存在 __data</string>
 
