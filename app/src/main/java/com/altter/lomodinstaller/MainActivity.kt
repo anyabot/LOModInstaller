@@ -571,6 +571,7 @@ class MainActivity : AppCompatActivity() {
 
         val pairs: List<Pair<ModSource, PatchPlatform>> = when {
             mShizukuShell.isReady() -> {
+                val modSourceCache = mutableMapOf<String, ShellModSource>()
                 allPlatforms.mapNotNull { platform ->
                     val switch = platform.switch ?: return@mapNotNull null
                     val gamePath = platform.legacyPath ?: return@mapNotNull null
@@ -579,7 +580,9 @@ class MainActivity : AppCompatActivity() {
                     if (!mShizukuShell.checkDirExist(path) && mShizukuShell.checkDirExist("/storage/emulated/0/$path"))
                         path = "/storage/emulated/0/$path"
                     if (!mShizukuShell.checkDirExist(path)) return@mapNotNull null
-                    Pair(ShellModSource(path, mShizukuShell), ShellPlatform(switch, gamePath, mShizukuShell))
+                    val name = getString(platform.labelRes)
+                    val modSource = modSourceCache.getOrPut(path) { ShellModSource(path, mShizukuShell) }
+                    Pair(modSource, ShellPlatform(switch, name, gamePath, mShizukuShell))
                 }
             }
 
@@ -589,7 +592,8 @@ class MainActivity : AppCompatActivity() {
                     val mod = platform.modDoc ?: return@mapNotNull null
                     val doc = platform.document ?: return@mapNotNull null
                     val shared = findMatchedDoc13(doc) ?: return@mapNotNull null
-                    Pair(DocumentModSource(mod), DocumentPlatform(switch, this, shared))
+                    val name = getString(platform.labelRes)
+                    Pair(DocumentModSource(mod), DocumentPlatform(switch, name, this, shared))
                 }
             }
 
@@ -600,7 +604,8 @@ class MainActivity : AppCompatActivity() {
                     val mod = platform.modDoc ?: return@mapNotNull null
                     val path = platform.legacyPath ?: return@mapNotNull null
                     val shared = findMatchedDoc(path, data) ?: return@mapNotNull null
-                    Pair(DocumentModSource(mod), DocumentPlatform(switch, this, shared))
+                    val name = getString(platform.labelRes)
+                    Pair(DocumentModSource(mod), DocumentPlatform(switch, name, this, shared))
                 }
             }
 
@@ -610,7 +615,8 @@ class MainActivity : AppCompatActivity() {
                     val path = platform.legacyPath ?: return@mapNotNull null
                     val modPath = platform.modFolder
                     if (modPath.isEmpty()) return@mapNotNull null
-                    Pair(FileModSource(modPath, storages), FilePlatform(switch, path, storages))
+                    val name = getString(platform.labelRes)
+                    Pair(FileModSource(modPath, storages), FilePlatform(switch, name, path, storages))
                 }
             }
         }

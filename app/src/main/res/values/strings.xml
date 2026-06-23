@@ -60,6 +60,7 @@
     <string name="NO_DATA_DOC">Data Folder not Found</string>
     <string name="NO_DEST">Folder %s does not exist in Shared</string>
     <string name="COPY_DONE">Copied __data from %s</string>
+    <string name="COPY_FAIL">Failed to copy __data from %s: %s</string>
     <string name="DEST_NO_DATA">__data does not exist in destination %s in Shared</string>
     <string name="SRC_NO_DATA">__data does not exist in source %s in Mod Folder</string>
 
